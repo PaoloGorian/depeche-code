@@ -48,6 +48,10 @@ export class PlannerApi {
     return this.http.post<ChatResult>(`${this.base}/chat`, { userId, message });
   }
 
+  suggestions(userId: string): Observable<{ items: string[]; source: string }> {
+    return this.http.get<{ items: string[]; source: string }>(`${this.base}/users/${userId}/suggestions`);
+  }
+
   aiPing(): Observable<AiText> {
     return this.http.get<AiText>(`${this.base}/ai/ping`);
   }

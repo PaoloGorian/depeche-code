@@ -41,6 +41,11 @@ public class PlannerController {
         return Map.of("date", service.today());
     }
 
+    @GetMapping("/users/{id}/suggestions")
+    public it.depechecode.officeplanner.ai.Suggestions suggestions(@PathVariable String id) {
+        return service.suggestions(id);
+    }
+
     @GetMapping("/ai/ping")
     public AiText aiPing() {
         return service.aiPing();

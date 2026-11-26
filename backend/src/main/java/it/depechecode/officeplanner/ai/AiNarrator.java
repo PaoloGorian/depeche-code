@@ -35,6 +35,30 @@ public class AiNarrator {
         return weekSummary(user, rec, data, null);
     }
 
+    /** Tre frasi brevi che l'utente potrebbe scrivere in chat per aggiornare i suoi impegni, generate dall'AI. */
+    public Suggestions suggestions(User user, Recommendation rec, OfficeData data) {
+        String week = rec.days().stream()
+                .map(d -> dayLabel(d.date()) + " " + d.verdict() + (d.note() == null ? "" : " (" + d.note() + ")"))
+                .collect(Collectors.joining(", "));
+        String prompt = """
+                Utente: %s, team %s. Settimana: %s.
+                Proponi 3 frasi brevissime (massimo 8 parole) in prima persona che l'utente potrebbe scrivere
+                per aggiornare i propri impegni, ad esempio aggiungere un impegno in presenza, un evento facoltativo
+                o annullarne uno. Usa giorni della settimana reali. Una frase per riga, senza numeri, trattini o virgolette.
+                """.formatted(user.fullName(), user.team(), week);
+        List<String> fallback = List.of("Oggi ho un workshop obbligatorio",
+                "Venerdì ho un evento facoltativo", "Annulla il mio impegno di lunedì");
+        return llm.complete(SYSTEM, prompt)
+                .map(t -> t.lines()
+                        .map(l -> l.replaceAll("^[\\s\\-*•\\d.)\"]+", "").replaceAll("[\"]+$", "").trim())
+                        .filter(l -> !l.isEmpty() && l.length() <= 80)
+                        .limit(3)
+                        .toList())
+                .filter(l -> !l.isEmpty())
+                .map(l -> new Suggestions(l, "llm"))
+                .orElseGet(() -> new Suggestions(fallback, "template"));
+    }
+
     /** Verifica reale dell'LLM: chiede una risposta che un template non può dare. */
     public AiText ping() {
         return llm.complete("Rispondi in italiano con una sola frase breve.",

@@ -58,6 +58,12 @@ public class PlannerService {
         return narrator.weekSummary(user, engine.recommend(user, data), data, latestChange);
     }
 
+    public it.depechecode.officeplanner.ai.Suggestions suggestions(String userId) {
+        OfficeData data = repository.snapshot();
+        User user = requireUser(data, userId);
+        return narrator.suggestions(user, engine.recommend(user, data), data);
+    }
+
     public AiText aiPing() {
         return narrator.ping();
     }

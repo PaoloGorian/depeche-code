@@ -43,12 +43,9 @@ export class App implements OnInit {
   // chat: aggiornare gli impegni in linguaggio naturale
   readonly chatText = signal('');
   readonly chatBusy = signal(false);
-  readonly chatLog = signal<{ from: 'me' | 'ai'; text: string; ok?: boolean; parser?: string }[]>([]);
-  readonly examples = [
-    'Oggi ho un workshop obbligatorio',
-    'Venerdì Marco Bianchi ha una demo al cliente',
-    'Annulla il mio impegno di lunedì',
-  ];
+  readonly chatLog = signal<{ from: 'me' | 'ai'; text: string; ok?: boolean; parser?: string; summary?: string }[]>([]);
+  readonly suggestions = signal<string[]>([]);
+  readonly suggestionsSource = signal<string>('template');
   readonly mapDay = signal<string | null>(null);
 
   readonly selectedUser = computed(() => this.users().find((u) => u.id === this.selectedUserId()) ?? null);
@@ -127,6 +124,7 @@ export class App implements OnInit {
 
   openPlanner(): void {
     this.plannerOpen.set(true);
+    this.loadSuggestions();
   }
 
   selectUser(id: string | undefined): void {
@@ -250,6 +248,15 @@ export class App implements OnInit {
     return Math.min(100, Math.round((score / 160) * 100));
   }
 
+  loadSuggestions(): void {
+    const id = this.selectedUserId();
+    if (!id) return;
+    this.api.suggestions(id).subscribe((r) => {
+      this.suggestions.set(r.items);
+      this.suggestionsSource.set(r.source);
+    });
+  }
+
   /** Invia la frase al backend: l'AI la trasforma in un impegno, poi il consiglio della settimana viene rigenerato. */
   sendChat(text = this.chatText()): void {
     const message = text.trim();
@@ -257,21 +264,20 @@ export class App implements OnInit {
     this.chatLog.update((log) => [...log, { from: 'me', text: message }]);
     this.chatText.set('');
     this.chatBusy.set(true);
-    this.summaryLoading.set(true);
     this.api.chat(this.selectedUserId(), message).subscribe({
       next: (res) => {
-        this.chatLog.update((log) => [...log, { from: 'ai', text: res.reply, ok: res.ok, parser: res.command?.parser }]);
+        this.chatLog.update((log) => [
+          ...log,
+          { from: 'ai', text: res.reply, ok: res.ok, parser: res.command?.parser, summary: res.summary?.text },
+        ]);
         // il consiglio mostrato e' sempre quello dell'utente loggato: se il comando riguarda un collega lo ricalcoliamo
-        const mine = res.userId === this.selectedUserId();
-        if (mine) this.summary.set(res.summary);
-        this.summaryLoading.set(false);
         this.chatBusy.set(false);
         this.api.users().subscribe((u) => this.users.set(u));
-        this.refresh(!mine);
+        this.refresh(false);
+        this.loadSuggestions();
       },
       error: () => {
         this.chatLog.update((log) => [...log, { from: 'ai', text: 'Errore di comunicazione con il server.', ok: false }]);
-        this.summaryLoading.set(false);
         this.chatBusy.set(false);
       },
     });
