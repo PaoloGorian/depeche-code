@@ -1,0 +1,14 @@
+# Java
+backend/target/
+*.class
+.idea/
+*.iml
+
+# Node / Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# OS / env
+.DS_Store
+.env

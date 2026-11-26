@@ -1,0 +1,628 @@
+{
+  "week": [
+    "2026-11-30",
+    "2026-12-01",
+    "2026-12-02",
+    "2026-12-03",
+    "2026-12-04"
+  ],
+  "users": [
+    {
+      "id": "u01",
+      "firstName": "Chiara",
+      "lastName": "Neri",
+      "email": "chiara.neri@depechecode.example",
+      "seniority": "JUNIOR",
+      "skills": [
+        "FE"
+      ],
+      "team": "Payments",
+      "minOfficeDays": 2,
+      "availability": [
+        {
+          "date": "2026-11-30",
+          "officeNeed": "REQUIRED",
+          "note": "Onboarding piattaforma pagamenti"
+        },
+        {
+          "date": "2026-12-01",
+          "officeNeed": "OPTIONAL",
+          "note": "Workshop design system"
+        }
+      ]
+    },
+    {
+      "id": "u02",
+      "firstName": "Marco",
+      "lastName": "Bianchi",
+      "email": "marco.bianchi@depechecode.example",
+      "seniority": "SENIOR",
+      "skills": [
+        "FE"
+      ],
+      "team": "Payments",
+      "minOfficeDays": 2,
+      "availability": [
+        {
+          "date": "2026-11-30",
+          "officeNeed": "OPTIONAL",
+          "note": "Allineamento architettura FE"
+        },
+        {
+          "date": "2026-12-01",
+          "officeNeed": "REQUIRED",
+          "note": "Sprint review"
+        },
+        {
+          "date": "2026-12-03",
+          "officeNeed": "REQUIRED",
+          "note": "Formazione Angular avanzato"
+        }
+      ]
+    },
+    {
+      "id": "u03",
+      "firstName": "Luca",
+      "lastName": "Ferri",
+      "email": "luca.ferri@depechecode.example",
+      "seniority": "SENIOR",
+      "skills": [
+        "BE"
+      ],
+      "team": "Payments",
+      "minOfficeDays": 3,
+      "availability": [
+        {
+          "date": "2026-11-30",
+          "officeNeed": "REQUIRED",
+          "note": "Kick-off release"
+        }
+      ]
+    },
+    {
+      "id": "u04",
+      "firstName": "Sara",
+      "lastName": "Galli",
+      "email": "sara.galli@depechecode.example",
+      "seniority": "JUNIOR",
+      "skills": [
+        "BE"
+      ],
+      "team": "Payments",
+      "minOfficeDays": 2,
+      "availability": [
+        {
+          "date": "2026-12-01",
+          "officeNeed": "OPTIONAL",
+          "note": "Pair programming API"
+        },
+        {
+          "date": "2026-12-04",
+          "officeNeed": "REQUIRED",
+          "note": "Demo al cliente"
+        }
+      ]
+    },
+    {
+      "id": "u05",
+      "firstName": "Davide",
+      "lastName": "Conti",
+      "email": "davide.conti@depechecode.example",
+      "seniority": "SENIOR",
+      "skills": [
+        "FE",
+        "BE"
+      ],
+      "team": "Payments",
+      "minOfficeDays": 1,
+      "availability": [
+        {
+          "date": "2026-12-02",
+          "officeNeed": "OPTIONAL",
+          "note": "Tech talk interno"
+        }
+      ]
+    },
+    {
+      "id": "u06",
+      "firstName": "Elena",
+      "lastName": "Riva",
+      "email": "elena.riva@depechecode.example",
+      "seniority": "SENIOR",
+      "skills": [
+        "FE"
+      ],
+      "team": "Mobile App",
+      "minOfficeDays": 2,
+      "availability": [
+        {
+          "date": "2026-12-02",
+          "officeNeed": "REQUIRED",
+          "note": "Workshop UX con il cliente"
+        }
+      ]
+    },
+    {
+      "id": "u07",
+      "firstName": "Matteo",
+      "lastName": "Greco",
+      "email": "matteo.greco@depechecode.example",
+      "seniority": "JUNIOR",
+      "skills": [
+        "FE"
+      ],
+      "team": "Mobile App",
+      "minOfficeDays": 2,
+      "availability": [
+        {
+          "date": "2026-12-01",
+          "officeNeed": "REQUIRED",
+          "note": "Onboarding mobile"
+        }
+      ]
+    },
+    {
+      "id": "u08",
+      "firstName": "Giorgia",
+      "lastName": "Villa",
+      "email": "giorgia.villa@depechecode.example",
+      "seniority": "SENIOR",
+      "skills": [
+        "BE"
+      ],
+      "team": "Mobile App",
+      "minOfficeDays": 2,
+      "availability": [
+        {
+          "date": "2026-11-30",
+          "officeNeed": "REQUIRED",
+          "note": "Planning trimestrale"
+        }
+      ]
+    },
+    {
+      "id": "u09",
+      "firstName": "Andrea",
+      "lastName": "Costa",
+      "email": "andrea.costa@depechecode.example",
+      "seniority": "JUNIOR",
+      "skills": [
+        "FE",
+        "BE"
+      ],
+      "team": "Mobile App",
+      "minOfficeDays": 2,
+      "availability": []
+    },
+    {
+      "id": "u10",
+      "firstName": "Francesca",
+      "lastName": "Lombardi",
+      "email": "francesca.lombardi@depechecode.example",
+      "seniority": "SENIOR",
+      "skills": [
+        "DATA"
+      ],
+      "team": "Data Platform",
+      "minOfficeDays": 2,
+      "availability": [
+        {
+          "date": "2026-11-30",
+          "officeNeed": "REQUIRED",
+          "note": "Workshop pipeline ETL"
+        },
+        {
+          "date": "2026-12-02",
+          "officeNeed": "OPTIONAL",
+          "note": "Review modello dati"
+        }
+      ]
+    },
+    {
+      "id": "u11",
+      "firstName": "Simone",
+      "lastName": "Moretti",
+      "email": "simone.moretti@depechecode.example",
+      "seniority": "JUNIOR",
+      "skills": [
+        "DATA"
+      ],
+      "team": "Data Platform",
+      "minOfficeDays": 2,
+      "availability": []
+    },
+    {
+      "id": "u12",
+      "firstName": "Valentina",
+      "lastName": "Fontana",
+      "email": "valentina.fontana@depechecode.example",
+      "seniority": "SENIOR",
+      "skills": [
+        "AI"
+      ],
+      "team": "Data Platform",
+      "minOfficeDays": 1,
+      "availability": [
+        {
+          "date": "2026-12-02",
+          "officeNeed": "REQUIRED",
+          "note": "Formazione GenAI"
+        }
+      ]
+    },
+    {
+      "id": "u13",
+      "firstName": "Riccardo",
+      "lastName": "Marino",
+      "email": "riccardo.marino@depechecode.example",
+      "seniority": "JUNIOR",
+      "skills": [
+        "AI"
+      ],
+      "team": "Data Platform",
+      "minOfficeDays": 2,
+      "availability": []
+    },
+    {
+      "id": "u14",
+      "firstName": "Alessia",
+      "lastName": "Rinaldi",
+      "email": "alessia.rinaldi@depechecode.example",
+      "seniority": "SENIOR",
+      "skills": [
+        "EMBEDDED"
+      ],
+      "team": "IoT Fleet",
+      "minOfficeDays": 2,
+      "availability": [
+        {
+          "date": "2026-11-30",
+          "officeNeed": "REQUIRED",
+          "note": "Test su banco hardware"
+        }
+      ]
+    },
+    {
+      "id": "u15",
+      "firstName": "Stefano",
+      "lastName": "Caruso",
+      "email": "stefano.caruso@depechecode.example",
+      "seniority": "JUNIOR",
+      "skills": [
+        "EMBEDDED"
+      ],
+      "team": "IoT Fleet",
+      "minOfficeDays": 3,
+      "availability": [
+        {
+          "date": "2026-12-01",
+          "officeNeed": "OPTIONAL",
+          "note": "Laboratorio firmware"
+        }
+      ]
+    },
+    {
+      "id": "u16",
+      "firstName": "Federica",
+      "lastName": "Gatti",
+      "email": "federica.gatti@depechecode.example",
+      "seniority": "SENIOR",
+      "skills": [
+        "BE"
+      ],
+      "team": "IoT Fleet",
+      "minOfficeDays": 0,
+      "availability": [
+        {
+          "date": "2026-12-02",
+          "officeNeed": "REQUIRED",
+          "note": "Visita del management"
+        }
+      ]
+    },
+    {
+      "id": "u17",
+      "firstName": "Nicola",
+      "lastName": "Serra",
+      "email": "nicola.serra@depechecode.example",
+      "seniority": "SENIOR",
+      "skills": [
+        "FE"
+      ],
+      "team": "IoT Fleet",
+      "minOfficeDays": 1,
+      "availability": []
+    },
+    {
+      "id": "u18",
+      "firstName": "Martina",
+      "lastName": "De Luca",
+      "email": "martina.deluca@depechecode.example",
+      "seniority": "JUNIOR",
+      "skills": [
+        "FE"
+      ],
+      "team": "IoT Fleet",
+      "minOfficeDays": 2,
+      "availability": [
+        {
+          "date": "2026-12-03",
+          "officeNeed": "OPTIONAL",
+          "note": "Retrospettiva di team"
+        }
+      ]
+    },
+    {
+      "id": "u19",
+      "firstName": "Giulio",
+      "lastName": "Testa",
+      "email": "giulio.testa@depechecode.example",
+      "seniority": "SENIOR",
+      "skills": [
+        "AI"
+      ],
+      "team": "IoT Fleet",
+      "minOfficeDays": 2,
+      "availability": [
+        {
+          "date": "2026-12-03",
+          "officeNeed": "REQUIRED",
+          "note": "Hackathon interno"
+        }
+      ]
+    },
+    {
+      "id": "u20",
+      "firstName": "Irene",
+      "lastName": "Sala",
+      "email": "irene.sala@depechecode.example",
+      "seniority": "JUNIOR",
+      "skills": [
+        "BE"
+      ],
+      "team": "Data Platform",
+      "minOfficeDays": 2,
+      "availability": [
+        {
+          "date": "2026-12-02",
+          "officeNeed": "OPTIONAL",
+          "note": "Brown bag su Spring"
+        }
+      ]
+    }
+  ],
+  "areas": [
+    {
+      "id": "a-fe",
+      "name": "Frontend Island",
+      "skill": "FE",
+      "seats": 5
+    },
+    {
+      "id": "a-be",
+      "name": "Backend Bay",
+      "skill": "BE",
+      "seats": 5
+    },
+    {
+      "id": "a-data",
+      "name": "Data Lake",
+      "skill": "DATA",
+      "seats": 3
+    },
+    {
+      "id": "a-emb",
+      "name": "Embedded Lab",
+      "skill": "EMBEDDED",
+      "seats": 3
+    },
+    {
+      "id": "a-ai",
+      "name": "AI Corner",
+      "skill": "AI",
+      "seats": 3
+    }
+  ],
+  "bookings": [
+    {
+      "userId": "u03",
+      "date": "2026-11-30",
+      "areaId": "a-be"
+    },
+    {
+      "userId": "u08",
+      "date": "2026-11-30",
+      "areaId": "a-be"
+    },
+    {
+      "userId": "u10",
+      "date": "2026-11-30",
+      "areaId": "a-data"
+    },
+    {
+      "userId": "u14",
+      "date": "2026-11-30",
+      "areaId": "a-emb"
+    },
+    {
+      "userId": "u06",
+      "date": "2026-11-30",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u15",
+      "date": "2026-11-30",
+      "areaId": "a-emb"
+    },
+    {
+      "userId": "u19",
+      "date": "2026-11-30",
+      "areaId": "a-ai"
+    },
+    {
+      "userId": "u02",
+      "date": "2026-12-01",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u03",
+      "date": "2026-12-01",
+      "areaId": "a-be"
+    },
+    {
+      "userId": "u06",
+      "date": "2026-12-01",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u07",
+      "date": "2026-12-01",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u08",
+      "date": "2026-12-01",
+      "areaId": "a-be"
+    },
+    {
+      "userId": "u09",
+      "date": "2026-12-01",
+      "areaId": "a-be"
+    },
+    {
+      "userId": "u11",
+      "date": "2026-12-01",
+      "areaId": "a-data"
+    },
+    {
+      "userId": "u13",
+      "date": "2026-12-01",
+      "areaId": "a-ai"
+    },
+    {
+      "userId": "u15",
+      "date": "2026-12-01",
+      "areaId": "a-emb"
+    },
+    {
+      "userId": "u06",
+      "date": "2026-12-02",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u07",
+      "date": "2026-12-02",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u17",
+      "date": "2026-12-02",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u18",
+      "date": "2026-12-02",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u10",
+      "date": "2026-12-02",
+      "areaId": "a-data"
+    },
+    {
+      "userId": "u11",
+      "date": "2026-12-02",
+      "areaId": "a-data"
+    },
+    {
+      "userId": "u12",
+      "date": "2026-12-02",
+      "areaId": "a-ai"
+    },
+    {
+      "userId": "u20",
+      "date": "2026-12-02",
+      "areaId": "a-be"
+    },
+    {
+      "userId": "u14",
+      "date": "2026-12-02",
+      "areaId": "a-emb"
+    },
+    {
+      "userId": "u15",
+      "date": "2026-12-02",
+      "areaId": "a-emb"
+    },
+    {
+      "userId": "u02",
+      "date": "2026-12-03",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u06",
+      "date": "2026-12-03",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u07",
+      "date": "2026-12-03",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u17",
+      "date": "2026-12-03",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u18",
+      "date": "2026-12-03",
+      "areaId": "a-fe"
+    },
+    {
+      "userId": "u03",
+      "date": "2026-12-03",
+      "areaId": "a-be"
+    },
+    {
+      "userId": "u08",
+      "date": "2026-12-03",
+      "areaId": "a-be"
+    },
+    {
+      "userId": "u09",
+      "date": "2026-12-03",
+      "areaId": "a-be"
+    },
+    {
+      "userId": "u19",
+      "date": "2026-12-03",
+      "areaId": "a-ai"
+    },
+    {
+      "userId": "u13",
+      "date": "2026-12-03",
+      "areaId": "a-ai"
+    },
+    {
+      "userId": "u03",
+      "date": "2026-12-04",
+      "areaId": "a-be"
+    },
+    {
+      "userId": "u04",
+      "date": "2026-12-04",
+      "areaId": "a-be"
+    },
+    {
+      "userId": "u10",
+      "date": "2026-12-04",
+      "areaId": "a-data"
+    },
+    {
+      "userId": "u15",
+      "date": "2026-12-04",
+      "areaId": "a-emb"
+    }
+  ]
+}
