@@ -14,6 +14,9 @@ public interface OfficeRepository {
 
     void addBooking(Booking booking);
 
+    /** Rimuove la prenotazione di un utente in una data; false se non esisteva. */
+    boolean removeBooking(String userId, String date);
+
     /** Crea o aggiorna lo stato di un utente in un giorno (FREE equivale a rimuovere l'impegno). */
     void setDayStatus(String userId, DayStatus status);
 

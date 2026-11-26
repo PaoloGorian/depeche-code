@@ -92,6 +92,12 @@ public class PlannerController {
         return service.book(request.userId(), request.date(), request.areaId());
     }
 
+    @PostMapping("/bookings/cancel")
+    public ResponseEntity<Void> cancelBooking(@RequestBody Booking request) {
+        service.cancelBooking(request.userId(), request.date());
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/invites/draft")
     public AiText inviteDraft(@RequestBody InviteRequest request) {
         return service.inviteDraft(request.fromUserId(), request.date(), request.toUserIds());

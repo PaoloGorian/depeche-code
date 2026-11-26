@@ -71,6 +71,18 @@ export class App implements OnInit {
   );
 
   /** Raccomandazione del motore per il giorno mostrato sulla mappa. */
+  /** Giorni prenotati dall'utente: un GO è confermato solo da una prenotazione. */
+  readonly bookedDays = computed<Record<string, boolean>>(() =>
+    Object.fromEntries(
+      this.bookings().filter((b) => b.userId === this.selectedUserId()).map((b) => [b.date, true] as [string, boolean]),
+    ),
+  );
+  readonly bookedCount = computed(() => Object.keys(this.bookedDays()).length);
+  readonly targetDays = computed(() => this.selectedUser()?.minOfficeDays ?? 0);
+  readonly goToConfirm = computed(
+    () => (this.recommendation()?.days ?? []).filter((d) => d.verdict === 'GO' && !this.bookedDays()[d.date]).length,
+  );
+
   readonly dayRec = computed(() => this.recommendation()?.days.find((d) => d.date === this.mapDay()) ?? null);
 
   /** Frase della card "Oggi sei qui": quanti colleghi del team sono nella stessa area. */
@@ -150,6 +162,18 @@ export class App implements OnInit {
         error: () => this.summaryLoading.set(false),
       });
     }
+  }
+
+  cancelBooking(date: string): void {
+    const user = this.selectedUser();
+    if (!user) return;
+    this.api.cancelBooking(user.id, date).subscribe({
+      next: () => {
+        this.showToast(`Prenotazione di ${this.dayLabel(date)} tolta`);
+        this.refresh();
+      },
+      error: (e) => this.showToast(e.error?.message ?? 'Operazione non riuscita'),
+    });
   }
 
   book(day: DayRecommendation): void {

@@ -101,6 +101,12 @@ public class PlannerService {
         return booking;
     }
 
+    public synchronized void cancelBooking(String userId, String date) {
+        if (!repository.removeBooking(userId, date)) {
+            throw new NoSuchElementException("Nessuna prenotazione da togliere per " + date);
+        }
+    }
+
     /** Simula l'accettazione degli inviti: prenota ogni collega nella sua area migliore. */
     public List<Booking> acceptInvites(String date, List<String> userIds) {
         List<Booking> created = new ArrayList<>();

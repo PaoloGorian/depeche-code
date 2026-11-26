@@ -59,6 +59,17 @@
       <span class="brand-name">Depeche Code</span>
     </div>
     <div class="topbar-right">
+      @if (selectedUser()) {
+        <div class="quota" [class.done]="bookedCount() >= targetDays()" title="Giorni prenotati rispetto ai giorni minimi in ufficio">
+          <span class="quota-num">{{ bookedCount() }}<small>/{{ targetDays() }}</small></span>
+          <span class="quota-text">
+            {{ targetDays() === 0 ? 'full remote' : 'giorni prenotati' }}
+            @if (goToConfirm()) {
+              <b>· {{ goToConfirm() }} GO da confermare</b>
+            }
+          </span>
+        </div>
+      }
       <button type="button" class="btn-primary" (click)="openPlanner()">Pianifica con l'AI</button>
       @if (selectedUser(); as me) {
         <button type="button" class="me" [title]="'Esci (' + me.firstName + ' ' + me.lastName + ')'" (click)="logout()">
@@ -76,27 +87,31 @@
       [week]="week()"
       [meId]="selectedUserId()"
       [verdicts]="verdicts()"
+      [booked]="bookedDays()"
       [(day)]="mapDay"
     />
 
     @if (selectedUser(); as me) {
       <aside class="here-card">
-        @if (myBooking(); as b) {
-          <p class="here-label">Oggi sei qui</p>
-          <p class="here-title">{{ areaName(b.areaId) }}</p>
-          <p class="here-sub">{{ teamTodayText() }}</p>
-        } @else if (dayRec(); as d) {
-          @if (d.verdict === 'GO') {
-            <p class="here-label">Giorno GO · area consigliata</p>
+        @if (dayRec(); as d) {
+          @if (myBooking(); as b) {
+            <p class="here-label">{{ dayLabel(d.date) }} · ✓ prenotato</p>
+            <p class="here-title">{{ areaName(b.areaId) }}</p>
+            <p class="here-sub">{{ teamTodayText() }}</p>
+            <button type="button" class="btn-ghost small" (click)="cancelBooking(d.date)">Togli prenotazione</button>
+          } @else if (d.verdict === 'GO') {
+            <p class="here-label">{{ dayLabel(d.date) }} · GO da confermare</p>
             <p class="here-title">{{ areaName(d.areaId) }}</p>
             <p class="here-sub">{{ d.note ?? 'Il tuo team sarà in ufficio' }}</p>
             <button type="button" class="btn-primary small" [disabled]="d.areaFull" (click)="book(d)">Prenota</button>
           } @else {
-            <p class="here-label">Giorno STAY</p>
+            <p class="here-label">{{ dayLabel(d.date) }} · STAY</p>
             <p class="here-title">Resta in remoto</p>
             <p class="here-sub">{{ d.areaFull ? 'La tua area è al completo' : 'Il tuo team non sarà in ufficio' }}</p>
+            <button type="button" class="btn-ghost small" [disabled]="d.areaFull" (click)="book(d)">Prenota comunque</button>
           }
-        } @else {
+          <p class="here-quota">Settimana: {{ bookedCount() }} di {{ targetDays() }} giorni prenotati</p>
+        } @else if (selectedUser(); as me) {
           <p class="here-label">Ciao {{ me.firstName }}</p>
           <p class="here-title">Sto calcolando la tua settimana…</p>
         }

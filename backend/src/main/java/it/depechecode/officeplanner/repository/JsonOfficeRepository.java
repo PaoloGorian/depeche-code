@@ -44,6 +44,16 @@ public class JsonOfficeRepository implements OfficeRepository {
     }
 
     @Override
+    public synchronized boolean removeBooking(String userId, String date) {
+        List<Booking> bookings = data.bookings().stream()
+                .filter(b -> !(b.userId().equals(userId) && b.date().equals(date)))
+                .toList();
+        boolean removed = bookings.size() < data.bookings().size();
+        data = new OfficeData(data.week(), data.users(), data.areas(), bookings);
+        return removed;
+    }
+
+    @Override
     public synchronized void setDayStatus(String userId, DayStatus status) {
         List<User> users = data.users().stream().map(u -> {
             if (!u.id().equals(userId)) {

@@ -36,6 +36,10 @@ export class PlannerApi {
     return this.http.post<Booking>(`${this.base}/bookings`, booking);
   }
 
+  cancelBooking(userId: string, date: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/bookings/cancel`, { userId, date, areaId: null });
+  }
+
   inviteDraft(fromUserId: string, date: string, toUserIds: string[]): Observable<AiText> {
     return this.http.post<AiText>(`${this.base}/invites/draft`, { fromUserId, date, toUserIds });
   }

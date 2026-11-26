@@ -19,6 +19,13 @@ import { buildScene } from './office-map.layout';
                   [attr.aria-selected]="d === currentDay()" (click)="day.set(d)">
             <span class="day-name">{{ dayShort(d) }}</span>
             <span class="day-verdict">{{ verdicts()[d] ?? '–' }}</span>
+            @if (booked()[d]) {
+              <span class="day-booked ok">✓ Prenotato</span>
+            } @else if (verdicts()[d] === 'GO') {
+              <span class="day-booked todo">Da prenotare</span>
+            } @else {
+              <span class="day-booked">Non prenotato</span>
+            }
           </button>
         }
       </nav>
@@ -92,6 +99,12 @@ import { buildScene } from './office-map.layout';
     .day-verdict { font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -.02em; color: var(--stay); }
     .day.go { background: var(--rd-blue-50); border-color: #c9ddf5; }
     .day.go .day-verdict { color: var(--go); }
+    .day-booked { font-size: 11.5px; font-weight: 700; color: var(--muted); white-space: nowrap; margin-top: 2px; }
+    .day-booked.ok { color: #1f9d6b; }
+    .day-booked.todo { color: #d9822b; }
+    .day.active .day-booked { color: #dbe8f8; }
+    .day.active .day-booked.ok { color: #6ee7b7; }
+    .day.active .day-booked.todo { color: #fbbf77; }
     .day.active { background: var(--rd-navy); border-color: var(--rd-navy); box-shadow: 0 10px 24px rgba(16, 58, 108, .22); }
     .day.active .day-name { color: #9cc3f2; }
     .day.active .day-verdict { color: #fff; }
@@ -144,6 +157,8 @@ export class OfficeMap {
   readonly meId = input<string | null>(null);
   /** Verdetto GO/STAY dell'utente per giorno (dal motore di raccomandazione). */
   readonly verdicts = input<Record<string, Verdict>>({});
+  /** Giorni in cui l'utente ha già una prenotazione: il GO è confermato solo così. */
+  readonly booked = input<Record<string, boolean>>({});
 
   /** Versione ridotta (solo mappa, senza giorni/etichette/legenda), usata nel login. */
   readonly compact = input(false);
