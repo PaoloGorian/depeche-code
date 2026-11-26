@@ -2,6 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { BrandLogo } from './brand-logo';
+import { OfficeMap } from './office-map/office-map';
 import { AiText, Area, Booking, DayRecommendation, OfficeNeed, Recommendation, User } from './models';
 import { PlannerApi } from './planner-api';
 
@@ -14,7 +15,7 @@ interface InviteDialog {
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, BrandLogo],
+  imports: [FormsModule, BrandLogo, OfficeMap],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -42,6 +43,11 @@ export class App implements OnInit {
     }
     return [...groups.entries()].map(([team, members]) => ({ team, members }));
   });
+
+  /** Verdetto per giorno, usato dalla mappa per marcare i giorni GO/STAY. */
+  readonly verdicts = computed<Record<string, 'GO' | 'STAY'>>(() =>
+    Object.fromEntries((this.recommendation()?.days ?? []).map((d) => [d.date, d.verdict])),
+  );
 
   readonly goCount = computed(() => this.recommendation()?.days.filter((d) => d.verdict === 'GO').length ?? 0);
 
