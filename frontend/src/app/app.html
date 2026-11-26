@@ -51,6 +51,14 @@
         </div>
       </section>
 
+      <dc-office-map
+        [areas]="areas()"
+        [bookings]="bookings()"
+        [users]="users()"
+        [week]="week()"
+        [meId]="selectedUserId()"
+      />
+
       <section class="card ai-card">
         <div class="ai-head">
           <h2 class="section-title">Il consiglio della settimana</h2>

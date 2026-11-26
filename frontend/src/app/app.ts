@@ -2,6 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { BrandLogo } from './brand-logo';
+import { OfficeMap } from './office-map/office-map';
 import { AiText, Area, Booking, DayRecommendation, OfficeNeed, Recommendation, User } from './models';
 import { PlannerApi } from './planner-api';
 
@@ -14,7 +15,7 @@ interface InviteDialog {
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, BrandLogo],
+  imports: [FormsModule, BrandLogo, OfficeMap],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
