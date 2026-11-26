@@ -3,14 +3,14 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { BrandLogo } from './brand-logo';
 import { OfficeMap } from './office-map/office-map';
-import { AiText, Area, Booking, Recommendation, User } from './models';
+import { AiText, Area, Booking, DayRecommendation, OfficeNeed, Recommendation, User } from './models';
 import { PlannerApi } from './planner-api';
 
-interface ChatEntry {
-  from: 'me' | 'ai';
-  text: string;
-  ok?: boolean;
-  parser?: string;
+interface InviteDialog {
+  day: DayRecommendation;
+  selected: Set<string>;
+  draft: AiText | null;
+  loading: boolean;
 }
 
 @Component({
@@ -30,14 +30,14 @@ export class App implements OnInit {
   readonly recommendation = signal<Recommendation | null>(null);
   readonly summary = signal<AiText | null>(null);
   readonly summaryLoading = signal(false);
+  readonly invite = signal<InviteDialog | null>(null);
   readonly toast = signal<string | null>(null);
+  readonly expanded = signal<Set<string>>(new Set());
 
-  readonly aiStatus = signal<AiText | null>(null);
-  readonly aiPinging = signal(false);
-
+  // chat: aggiornare gli impegni in linguaggio naturale
   readonly chatText = signal('');
   readonly chatBusy = signal(false);
-  readonly chatLog = signal<ChatEntry[]>([]);
+  readonly chatLog = signal<{ from: 'me' | 'ai'; text: string; ok?: boolean; parser?: string }[]>([]);
   readonly examples = [
     'Oggi Chiara ha un workshop obbligatorio',
     'Venerdì Marco Bianchi ha una demo al cliente',
@@ -60,7 +60,20 @@ export class App implements OnInit {
     Object.fromEntries((this.recommendation()?.days ?? []).map((d) => [d.date, d.verdict])),
   );
 
-  readonly goDays = computed(() => (this.recommendation()?.days ?? []).filter((d) => d.verdict === 'GO'));
+  readonly goCount = computed(() => this.recommendation()?.days.filter((d) => d.verdict === 'GO').length ?? 0);
+
+  /** Matrice presenze: per ogni area e giorno, posti occupati e quanti del team dell'utente. */
+  readonly heatmap = computed(() => {
+    const me = this.selectedUser();
+    return this.areas().map((area) => ({
+      area,
+      cells: this.week().map((date) => {
+        const inArea = this.bookings().filter((b) => b.areaId === area.id && b.date === date);
+        const team = me ? inArea.filter((b) => this.userById(b.userId)?.team === me.team).length : 0;
+        return { date, occupied: inArea.length, ratio: inArea.length / area.seats, team };
+      }),
+    }));
+  });
 
   ngOnInit(): void {
     forkJoin({
@@ -75,32 +88,18 @@ export class App implements OnInit {
       this.bookings.set(bookings);
       this.selectUser(users[0]?.id);
     });
-    this.pingAi(false);
   }
 
-  /** Test reale dell'AI: chiede al modello una frase sempre diversa, che nessun template può produrre. */
-  pingAi(showResult = true): void {
-    this.aiPinging.set(true);
-    this.api.aiPing().subscribe({
-      next: (r) => {
-        this.aiStatus.set(r);
-        this.aiPinging.set(false);
-        if (showResult) this.showToast(r.source === 'llm' ? `Risposta del modello: “${r.text}”` : r.text);
-      },
-      error: () => this.aiPinging.set(false),
-    });
-  }
-
-  selectUser(id: string | undefined, withSummary = true): void {
+  selectUser(id: string | undefined): void {
     if (!id) return;
     this.selectedUserId.set(id);
-    this.refresh(withSummary);
+    this.expanded.set(new Set());
+    this.refresh();
   }
 
   refresh(withSummary = true): void {
     const id = this.selectedUserId();
     if (!id) return;
-    this.api.users().subscribe((u) => this.users.set(u));
     this.api.bookings().subscribe((b) => this.bookings.set(b));
     this.api.recommendation(id).subscribe((r) => this.recommendation.set(r));
     if (withSummary) {
@@ -116,6 +115,105 @@ export class App implements OnInit {
     }
   }
 
+  book(day: DayRecommendation): void {
+    const user = this.selectedUser();
+    if (!user) return;
+    this.api.book({ userId: user.id, date: day.date, areaId: day.areaId }).subscribe({
+      next: () => {
+        this.showToast(`Prenotato ${this.dayLabel(day.date)} in ${this.areaName(day.areaId)}`);
+        this.refresh();
+      },
+      error: (e) => this.showToast(e.error?.message ?? 'Prenotazione non riuscita'),
+    });
+  }
+
+  openInvite(day: DayRecommendation): void {
+    this.invite.set({ day, selected: new Set(day.inviteUserIds), draft: null, loading: false });
+    this.generateDraft();
+  }
+
+  toggleInvitee(id: string): void {
+    const dialog = this.invite();
+    if (!dialog) return;
+    const selected = new Set(dialog.selected);
+    selected.has(id) ? selected.delete(id) : selected.add(id);
+    this.invite.set({ ...dialog, selected });
+  }
+
+  generateDraft(): void {
+    const dialog = this.invite();
+    const user = this.selectedUser();
+    if (!dialog || !user || dialog.selected.size === 0) return;
+    this.invite.set({ ...dialog, loading: true });
+    this.api.inviteDraft(user.id, dialog.day.date, [...dialog.selected]).subscribe({
+      next: (draft) => this.invite.update((d) => (d ? { ...d, draft, loading: false } : d)),
+      error: () => this.invite.update((d) => (d ? { ...d, loading: false } : d)),
+    });
+  }
+
+  updateDraftText(text: string): void {
+    this.invite.update((d) => (d && d.draft ? { ...d, draft: { ...d.draft, text } } : d));
+  }
+
+  sendInvite(): void {
+    const dialog = this.invite();
+    const user = this.selectedUser();
+    if (!dialog || !user) return;
+    this.api.acceptInvites(user.id, dialog.day.date, [...dialog.selected]).subscribe((created) => {
+      this.invite.set(null);
+      this.showToast(
+        `Invito inviato. ${created.length} ${created.length === 1 ? 'collega ha' : 'colleghi hanno'} accettato e prenotato`,
+      );
+      this.refresh();
+    });
+  }
+
+  resetDemo(): void {
+    this.api.reset().subscribe(() => {
+      this.chatLog.set([]);
+      this.api.users().subscribe((u) => this.users.set(u));
+      this.showToast('Dati demo ripristinati');
+      this.refresh();
+    });
+  }
+
+  toggleReasons(date: string): void {
+    const next = new Set(this.expanded());
+    next.has(date) ? next.delete(date) : next.add(date);
+    this.expanded.set(next);
+  }
+
+  // ---------------------------------------------------------------- helpers per il template
+
+  userById(id: string): User | undefined {
+    return this.users().find((u) => u.id === id);
+  }
+
+  areaName(id: string | null): string {
+    return this.areas().find((a) => a.id === id)?.name ?? 'Nessuna area';
+  }
+
+  initials(u: User | undefined): string {
+    return u ? `${u.firstName[0]}${u.lastName[0]}` : '?';
+  }
+
+  dayLabel(iso: string): string {
+    return new Date(iso + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric' });
+  }
+
+  dayShort(iso: string): string {
+    return new Date(iso + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' });
+  }
+
+  needLabel(need: OfficeNeed): string {
+    return { REQUIRED: 'Obbligatorio', OPTIONAL: 'Jolly 🃏', FREE: 'Libero' }[need];
+  }
+
+  scoreWidth(score: number): number {
+    return Math.min(100, Math.round((score / 160) * 100));
+  }
+
+  /** Invia la frase al backend: l'AI la trasforma in un impegno, poi il consiglio della settimana viene rigenerato. */
   sendChat(text = this.chatText()): void {
     const message = text.trim();
     if (!message || this.chatBusy()) return;
@@ -125,14 +223,13 @@ export class App implements OnInit {
     this.summaryLoading.set(true);
     this.api.chat(this.selectedUserId(), message).subscribe({
       next: (res) => {
-        this.chatLog.update((log) => [
-          ...log,
-          { from: 'ai', text: res.reply, ok: res.ok, parser: res.command?.parser },
-        ]);
+        this.chatLog.update((log) => [...log, { from: 'ai', text: res.reply, ok: res.ok, parser: res.command?.parser }]);
+        this.selectedUserId.set(res.userId);
         this.summary.set(res.summary);
         this.summaryLoading.set(false);
         this.chatBusy.set(false);
-        this.selectUser(res.userId, false);
+        this.api.users().subscribe((u) => this.users.set(u));
+        this.refresh(false);
       },
       error: () => {
         this.chatLog.update((log) => [...log, { from: 'ai', text: 'Errore di comunicazione con il server.', ok: false }]);
@@ -142,26 +239,8 @@ export class App implements OnInit {
     });
   }
 
-  resetDemo(): void {
-    this.api.reset().subscribe(() => {
-      this.chatLog.set([]);
-      this.showToast('Dati demo ripristinati');
-      this.refresh();
-    });
-  }
-
-  // ---------------------------------------------------------------- helpers per il template
-
-  initials(u: User | undefined | null): string {
-    return u ? `${u.firstName[0]}${u.lastName[0]}` : '?';
-  }
-
-  dayLabel(iso: string): string {
-    return new Date(iso + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric' });
-  }
-
   private showToast(message: string): void {
     this.toast.set(message);
-    setTimeout(() => this.toast.set(null), 6000);
+    setTimeout(() => this.toast.set(null), 3500);
   }
 }
