@@ -11,25 +11,24 @@ import { buildScene } from './office-map.layout';
   selector: 'dc-office-map',
   template: `
     <section class="map">
+      <nav class="days" role="tablist" aria-label="Giorno della settimana">
+        @for (d of week(); track d) {
+          <button type="button" role="tab" class="day" [class.active]="d === currentDay()"
+                  [class.go]="verdicts()[d] === 'GO'" [class.stay]="verdicts()[d] === 'STAY'"
+                  [attr.aria-selected]="d === currentDay()" (click)="day.set(d)">
+            <span class="day-name">{{ dayShort(d) }}</span>
+            <span class="day-verdict">{{ verdicts()[d] ?? '–' }}</span>
+          </button>
+        }
+      </nav>
+
       <header class="map-head">
-        <div>
-          <p class="eyebrow">{{ dayLong(currentDay()) }} · solo visualizzazione</p>
-          <h2>{{ inOffice() }} in Box</h2>
+        <p class="eyebrow">{{ dayLong(currentDay()) }} · solo visualizzazione</p>
+        <p class="count"><b>{{ inOffice() }}</b> in Box
           @if (verdicts()[currentDay()]; as v) {
-            <p class="me-line">{{ v === 'GO' ? 'Per te è un giorno GO: vai in ufficio' : 'Per te è STAY: resta in remoto' }}</p>
+            <span class="me-line">· {{ v === 'GO' ? 'per te è un giorno GO, vai in ufficio' : 'per te è STAY, resta in remoto' }}</span>
           }
-        </div>
-        <div class="days" role="tablist" aria-label="Giorno">
-          @for (d of week(); track d) {
-            <button type="button" role="tab" [class.active]="d === currentDay()" [attr.aria-selected]="d === currentDay()"
-                    (click)="day.set(d)">
-              {{ dayShort(d) }}
-              @if (verdicts()[d]; as v) {
-                <span class="verdict verdict-{{ v.toLowerCase() }}">{{ v }}</span>
-              }
-            </button>
-          }
-        </div>
+        </p>
       </header>
 
       <svg class="iso" [attr.viewBox]="scene().viewBox" role="img" aria-label="Mappa delle aree e delle persone in ufficio">
@@ -78,17 +77,26 @@ import { buildScene } from './office-map.layout';
   styles: `
     :host { display: block; }
     .map { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px 18px; }
-    .map-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .days { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; }
+    .day {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+      padding: 14px 16px 12px; border-radius: 16px; border: 1px solid var(--line);
+      background: var(--bg); text-align: left; transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .day:hover { transform: translateY(-2px); }
+    .day-name { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: capitalize; }
+    .day-verdict { font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -.02em; color: var(--stay); }
+    .day.go { background: var(--rd-blue-50); border-color: #c9ddf5; }
+    .day.go .day-verdict { color: var(--go); }
+    .day.active { background: var(--rd-navy); border-color: var(--rd-navy); box-shadow: 0 10px 24px rgba(16, 58, 108, .22); }
+    .day.active .day-name { color: #9cc3f2; }
+    .day.active .day-verdict { color: #fff; }
+    .map-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
     .eyebrow { margin: 0; font-size: 13px; color: var(--muted); }
-    h2 { margin: 4px 0 0; font-size: 30px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); }
-    .me-line { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
-    .days { display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: var(--bg); }
-    .days button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--muted); padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-transform: capitalize; }
-    .days button.active { background: var(--rd-navy); color: #fff; }
-    .verdict { font-size: 10px; font-weight: 800; letter-spacing: .04em; padding: 2px 6px; border-radius: 999px; }
-    .verdict-go { background: var(--go); color: #fff; }
-    .verdict-stay { background: var(--line); color: var(--stay); }
-    .active .verdict-stay { background: rgba(255, 255, 255, .18); color: #fff; }
+    .count { margin: 0; font-size: 15px; color: var(--ink); }
+    .count b { font-size: 22px; }
+    .me-line { color: var(--muted); }
+    @media (max-width: 700px) { .day-verdict { font-size: 22px; } .day { padding: 10px; } }
     .iso { display: block; width: 100%; height: auto; margin-top: 8px; }
     .pin-shadow { fill: var(--rd-navy); opacity: .16; }
     .pin-face { stroke-width: 2; }
