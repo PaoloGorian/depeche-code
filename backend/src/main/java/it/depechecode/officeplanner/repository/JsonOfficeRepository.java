@@ -2,6 +2,9 @@ package it.depechecode.officeplanner.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.depechecode.officeplanner.domain.Booking;
+import it.depechecode.officeplanner.domain.DayStatus;
+import it.depechecode.officeplanner.domain.OfficeNeed;
+import it.depechecode.officeplanner.domain.User;
 import it.depechecode.officeplanner.domain.OfficeData;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -38,6 +41,24 @@ public class JsonOfficeRepository implements OfficeRepository {
         List<Booking> bookings = new ArrayList<>(data.bookings());
         bookings.add(booking);
         data = new OfficeData(data.week(), data.users(), data.areas(), bookings);
+    }
+
+    @Override
+    public synchronized void setDayStatus(String userId, DayStatus status) {
+        List<User> users = data.users().stream().map(u -> {
+            if (!u.id().equals(userId)) {
+                return u;
+            }
+            List<DayStatus> availability = new ArrayList<>(u.availability().stream()
+                    .filter(d -> !d.date().equals(status.date()))
+                    .toList());
+            if (status.officeNeed() != OfficeNeed.FREE) {
+                availability.add(status);
+            }
+            return new User(u.id(), u.firstName(), u.lastName(), u.email(), u.seniority(), u.skills(),
+                    u.team(), u.minOfficeDays(), availability);
+        }).toList();
+        data = new OfficeData(data.week(), users, data.areas(), data.bookings());
     }
 
     @Override

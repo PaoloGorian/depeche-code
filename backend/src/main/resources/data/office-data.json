@@ -1,10 +1,10 @@
 {
   "week": [
-    "2026-11-30",
-    "2026-12-01",
-    "2026-12-02",
-    "2026-12-03",
-    "2026-12-04"
+    "2026-11-23",
+    "2026-11-24",
+    "2026-11-25",
+    "2026-11-26",
+    "2026-11-27"
   ],
   "users": [
     {
@@ -20,12 +20,12 @@
       "minOfficeDays": 2,
       "availability": [
         {
-          "date": "2026-11-30",
+          "date": "2026-11-23",
           "officeNeed": "REQUIRED",
           "note": "Onboarding piattaforma pagamenti"
         },
         {
-          "date": "2026-12-01",
+          "date": "2026-11-24",
           "officeNeed": "OPTIONAL",
           "note": "Workshop design system"
         }
@@ -44,17 +44,17 @@
       "minOfficeDays": 2,
       "availability": [
         {
-          "date": "2026-11-30",
+          "date": "2026-11-23",
           "officeNeed": "OPTIONAL",
           "note": "Allineamento architettura FE"
         },
         {
-          "date": "2026-12-01",
+          "date": "2026-11-24",
           "officeNeed": "REQUIRED",
           "note": "Sprint review"
         },
         {
-          "date": "2026-12-03",
+          "date": "2026-11-26",
           "officeNeed": "REQUIRED",
           "note": "Formazione Angular avanzato"
         }
@@ -73,7 +73,7 @@
       "minOfficeDays": 3,
       "availability": [
         {
-          "date": "2026-11-30",
+          "date": "2026-11-23",
           "officeNeed": "REQUIRED",
           "note": "Kick-off release"
         }
@@ -92,12 +92,12 @@
       "minOfficeDays": 2,
       "availability": [
         {
-          "date": "2026-12-01",
+          "date": "2026-11-24",
           "officeNeed": "OPTIONAL",
           "note": "Pair programming API"
         },
         {
-          "date": "2026-12-04",
+          "date": "2026-11-27",
           "officeNeed": "REQUIRED",
           "note": "Demo al cliente"
         }
@@ -117,7 +117,7 @@
       "minOfficeDays": 1,
       "availability": [
         {
-          "date": "2026-12-02",
+          "date": "2026-11-25",
           "officeNeed": "OPTIONAL",
           "note": "Tech talk interno"
         }
@@ -136,7 +136,7 @@
       "minOfficeDays": 2,
       "availability": [
         {
-          "date": "2026-12-02",
+          "date": "2026-11-25",
           "officeNeed": "REQUIRED",
           "note": "Workshop UX con il cliente"
         }
@@ -155,7 +155,7 @@
       "minOfficeDays": 2,
       "availability": [
         {
-          "date": "2026-12-01",
+          "date": "2026-11-24",
           "officeNeed": "REQUIRED",
           "note": "Onboarding mobile"
         }
@@ -174,7 +174,7 @@
       "minOfficeDays": 2,
       "availability": [
         {
-          "date": "2026-11-30",
+          "date": "2026-11-23",
           "officeNeed": "REQUIRED",
           "note": "Planning trimestrale"
         }
@@ -207,12 +207,12 @@
       "minOfficeDays": 2,
       "availability": [
         {
-          "date": "2026-11-30",
+          "date": "2026-11-23",
           "officeNeed": "REQUIRED",
           "note": "Workshop pipeline ETL"
         },
         {
-          "date": "2026-12-02",
+          "date": "2026-11-25",
           "officeNeed": "OPTIONAL",
           "note": "Review modello dati"
         }
@@ -244,7 +244,7 @@
       "minOfficeDays": 1,
       "availability": [
         {
-          "date": "2026-12-02",
+          "date": "2026-11-25",
           "officeNeed": "REQUIRED",
           "note": "Formazione GenAI"
         }
@@ -276,7 +276,7 @@
       "minOfficeDays": 2,
       "availability": [
         {
-          "date": "2026-11-30",
+          "date": "2026-11-23",
           "officeNeed": "REQUIRED",
           "note": "Test su banco hardware"
         }
@@ -295,7 +295,7 @@
       "minOfficeDays": 3,
       "availability": [
         {
-          "date": "2026-12-01",
+          "date": "2026-11-24",
           "officeNeed": "OPTIONAL",
           "note": "Laboratorio firmware"
         }
@@ -314,7 +314,7 @@
       "minOfficeDays": 0,
       "availability": [
         {
-          "date": "2026-12-02",
+          "date": "2026-11-25",
           "officeNeed": "REQUIRED",
           "note": "Visita del management"
         }
@@ -346,7 +346,7 @@
       "minOfficeDays": 2,
       "availability": [
         {
-          "date": "2026-12-03",
+          "date": "2026-11-26",
           "officeNeed": "OPTIONAL",
           "note": "Retrospettiva di team"
         }
@@ -365,7 +365,7 @@
       "minOfficeDays": 2,
       "availability": [
         {
-          "date": "2026-12-03",
+          "date": "2026-11-26",
           "officeNeed": "REQUIRED",
           "note": "Hackathon interno"
         }
@@ -384,7 +384,7 @@
       "minOfficeDays": 2,
       "availability": [
         {
-          "date": "2026-12-02",
+          "date": "2026-11-25",
           "officeNeed": "OPTIONAL",
           "note": "Brown bag su Spring"
         }
@@ -426,202 +426,202 @@
   "bookings": [
     {
       "userId": "u03",
-      "date": "2026-11-30",
+      "date": "2026-11-23",
       "areaId": "a-be"
     },
     {
       "userId": "u08",
-      "date": "2026-11-30",
+      "date": "2026-11-23",
       "areaId": "a-be"
     },
     {
       "userId": "u10",
-      "date": "2026-11-30",
+      "date": "2026-11-23",
       "areaId": "a-data"
     },
     {
       "userId": "u14",
-      "date": "2026-11-30",
+      "date": "2026-11-23",
       "areaId": "a-emb"
     },
     {
       "userId": "u06",
-      "date": "2026-11-30",
+      "date": "2026-11-23",
       "areaId": "a-fe"
     },
     {
       "userId": "u15",
-      "date": "2026-11-30",
+      "date": "2026-11-23",
       "areaId": "a-emb"
     },
     {
       "userId": "u19",
-      "date": "2026-11-30",
+      "date": "2026-11-23",
       "areaId": "a-ai"
     },
     {
       "userId": "u02",
-      "date": "2026-12-01",
+      "date": "2026-11-24",
       "areaId": "a-fe"
     },
     {
       "userId": "u03",
-      "date": "2026-12-01",
+      "date": "2026-11-24",
       "areaId": "a-be"
     },
     {
       "userId": "u06",
-      "date": "2026-12-01",
+      "date": "2026-11-24",
       "areaId": "a-fe"
     },
     {
       "userId": "u07",
-      "date": "2026-12-01",
+      "date": "2026-11-24",
       "areaId": "a-fe"
     },
     {
       "userId": "u08",
-      "date": "2026-12-01",
+      "date": "2026-11-24",
       "areaId": "a-be"
     },
     {
       "userId": "u09",
-      "date": "2026-12-01",
+      "date": "2026-11-24",
       "areaId": "a-be"
     },
     {
       "userId": "u11",
-      "date": "2026-12-01",
+      "date": "2026-11-24",
       "areaId": "a-data"
     },
     {
       "userId": "u13",
-      "date": "2026-12-01",
+      "date": "2026-11-24",
       "areaId": "a-ai"
     },
     {
       "userId": "u15",
-      "date": "2026-12-01",
+      "date": "2026-11-24",
       "areaId": "a-emb"
     },
     {
       "userId": "u06",
-      "date": "2026-12-02",
+      "date": "2026-11-25",
       "areaId": "a-fe"
     },
     {
       "userId": "u07",
-      "date": "2026-12-02",
+      "date": "2026-11-25",
       "areaId": "a-fe"
     },
     {
       "userId": "u17",
-      "date": "2026-12-02",
+      "date": "2026-11-25",
       "areaId": "a-fe"
     },
     {
       "userId": "u18",
-      "date": "2026-12-02",
+      "date": "2026-11-25",
       "areaId": "a-fe"
     },
     {
       "userId": "u10",
-      "date": "2026-12-02",
+      "date": "2026-11-25",
       "areaId": "a-data"
     },
     {
       "userId": "u11",
-      "date": "2026-12-02",
+      "date": "2026-11-25",
       "areaId": "a-data"
     },
     {
       "userId": "u12",
-      "date": "2026-12-02",
+      "date": "2026-11-25",
       "areaId": "a-ai"
     },
     {
       "userId": "u20",
-      "date": "2026-12-02",
+      "date": "2026-11-25",
       "areaId": "a-be"
     },
     {
       "userId": "u14",
-      "date": "2026-12-02",
+      "date": "2026-11-25",
       "areaId": "a-emb"
     },
     {
       "userId": "u15",
-      "date": "2026-12-02",
+      "date": "2026-11-25",
       "areaId": "a-emb"
     },
     {
       "userId": "u02",
-      "date": "2026-12-03",
+      "date": "2026-11-26",
       "areaId": "a-fe"
     },
     {
       "userId": "u06",
-      "date": "2026-12-03",
+      "date": "2026-11-26",
       "areaId": "a-fe"
     },
     {
       "userId": "u07",
-      "date": "2026-12-03",
+      "date": "2026-11-26",
       "areaId": "a-fe"
     },
     {
       "userId": "u17",
-      "date": "2026-12-03",
+      "date": "2026-11-26",
       "areaId": "a-fe"
     },
     {
       "userId": "u18",
-      "date": "2026-12-03",
+      "date": "2026-11-26",
       "areaId": "a-fe"
     },
     {
       "userId": "u03",
-      "date": "2026-12-03",
+      "date": "2026-11-26",
       "areaId": "a-be"
     },
     {
       "userId": "u08",
-      "date": "2026-12-03",
+      "date": "2026-11-26",
       "areaId": "a-be"
     },
     {
       "userId": "u09",
-      "date": "2026-12-03",
+      "date": "2026-11-26",
       "areaId": "a-be"
     },
     {
       "userId": "u19",
-      "date": "2026-12-03",
+      "date": "2026-11-26",
       "areaId": "a-ai"
     },
     {
       "userId": "u13",
-      "date": "2026-12-03",
+      "date": "2026-11-26",
       "areaId": "a-ai"
     },
     {
       "userId": "u03",
-      "date": "2026-12-04",
+      "date": "2026-11-27",
       "areaId": "a-be"
     },
     {
       "userId": "u04",
-      "date": "2026-12-04",
+      "date": "2026-11-27",
       "areaId": "a-be"
     },
     {
       "userId": "u10",
-      "date": "2026-12-04",
+      "date": "2026-11-27",
       "areaId": "a-data"
     },
     {
       "userId": "u15",
-      "date": "2026-12-04",
+      "date": "2026-11-27",
       "areaId": "a-emb"
     }
   ]

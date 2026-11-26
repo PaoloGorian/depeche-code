@@ -11,6 +11,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,11 +30,14 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
     private final String baseUrl;
     private final String apiKey;
     private final String model;
+    private final String reasoningEffort;
 
-    public OpenAiCompatibleLlmClient(String baseUrl, String apiKey, String model, ObjectMapper mapper) {
+    public OpenAiCompatibleLlmClient(String baseUrl, String apiKey, String model, String reasoningEffort,
+                                     ObjectMapper mapper) {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         this.apiKey = apiKey;
         this.model = model;
+        this.reasoningEffort = reasoningEffort;
         this.mapper = mapper;
         this.http = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
@@ -44,13 +48,16 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
     @Override
     public Optional<String> complete(String systemPrompt, String userPrompt) {
         try {
-            Map<String, Object> body = Map.of(
-                    "model", model,
-                    "temperature", 0.6,
-                    "max_tokens", 350,
-                    "messages", List.of(
-                            Map.of("role", "system", "content", systemPrompt),
-                            Map.of("role", "user", "content", userPrompt)));
+            Map<String, Object> body = new HashMap<>();
+            body.put("model", model);
+            body.put("temperature", 0.4);
+            body.put("max_tokens", 800);
+            body.put("messages", List.of(
+                    Map.of("role", "system", "content", systemPrompt),
+                    Map.of("role", "user", "content", userPrompt)));
+            if (reasoningEffort != null && !reasoningEffort.isBlank()) {
+                body.put("reasoning_effort", reasoningEffort);
+            }
 
             HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl + "/chat/completions"))
                     .timeout(Duration.ofSeconds(25))

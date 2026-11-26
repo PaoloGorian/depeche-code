@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AiText, Area, Booking, Recommendation, User } from './models';
+import { AiText, Area, Booking, ChatResult, Recommendation, User } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class PlannerApi {
@@ -42,6 +42,14 @@ export class PlannerApi {
 
   acceptInvites(fromUserId: string, date: string, toUserIds: string[]): Observable<Booking[]> {
     return this.http.post<Booking[]>(`${this.base}/invites/accept`, { fromUserId, date, toUserIds });
+  }
+
+  chat(userId: string | null, message: string): Observable<ChatResult> {
+    return this.http.post<ChatResult>(`${this.base}/chat`, { userId, message });
+  }
+
+  today(): Observable<{ date: string }> {
+    return this.http.get<{ date: string }>(`${this.base}/today`);
   }
 
   reset(): Observable<void> {
