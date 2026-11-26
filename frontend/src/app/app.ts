@@ -32,6 +32,9 @@ export class App implements OnInit {
   readonly summaryLoading = signal(false);
   readonly toast = signal<string | null>(null);
 
+  readonly aiStatus = signal<AiText | null>(null);
+  readonly aiPinging = signal(false);
+
   readonly chatText = signal('');
   readonly chatBusy = signal(false);
   readonly chatLog = signal<ChatEntry[]>([]);
@@ -71,6 +74,20 @@ export class App implements OnInit {
       this.areas.set(areas);
       this.bookings.set(bookings);
       this.selectUser(users[0]?.id);
+    });
+    this.pingAi(false);
+  }
+
+  /** Test reale dell'AI: chiede al modello una frase sempre diversa, che nessun template può produrre. */
+  pingAi(showResult = true): void {
+    this.aiPinging.set(true);
+    this.api.aiPing().subscribe({
+      next: (r) => {
+        this.aiStatus.set(r);
+        this.aiPinging.set(false);
+        if (showResult) this.showToast(r.source === 'llm' ? `Risposta del modello: “${r.text}”` : r.text);
+      },
+      error: () => this.aiPinging.set(false),
     });
   }
 
@@ -145,6 +162,6 @@ export class App implements OnInit {
 
   private showToast(message: string): void {
     this.toast.set(message);
-    setTimeout(() => this.toast.set(null), 3500);
+    setTimeout(() => this.toast.set(null), 6000);
   }
 }

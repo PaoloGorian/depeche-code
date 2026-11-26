@@ -41,6 +41,11 @@ public class PlannerController {
         return Map.of("date", service.today());
     }
 
+    @GetMapping("/ai/ping")
+    public AiText aiPing() {
+        return service.aiPing();
+    }
+
     @PostMapping("/chat")
     public ChatService.ChatResult chat(@RequestBody ChatRequest request) {
         return chat.handle(request.userId(), request.message());

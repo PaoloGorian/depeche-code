@@ -164,3 +164,39 @@ textarea { width: 100%; font: inherit; font-size: 14px; line-height: 1.5; paddin
 .examples { display: flex; gap: 6px; flex-wrap: wrap; }
 .example { background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 12px; color: var(--muted); }
 .example:hover:not(:disabled) { border-color: var(--rd-blue); color: var(--rd-blue); }
+
+/* ---- landing senza scroll: tutto in una schermata ---- */
+:host { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+.topbar { padding: 10px 24px; flex: none; }
+.brand h1 { font-size: 20px; }
+.layout { flex: 1; min-height: 0; grid-template-columns: 230px 1fr; }
+.sidebar { max-height: none; height: 100%; padding: 12px 10px; position: static; }
+.team-group { margin-bottom: 6px; }
+.person { padding: 3px 8px; }
+.person-name { font-size: 13px; }
+.avatar { width: 26px; height: 26px; font-size: 11px; }
+.content {
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px;
+  padding: 16px 20px; min-height: 0; height: 100%; overflow: hidden;
+}
+.col-left { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.col-right { min-height: 0; }
+.hero { padding: 20px 24px; flex: none; }
+.hero .avatar.xl { width: 48px; height: 48px; font-size: 17px; }
+.hero h2 { font-size: 22px; }
+.hero-text { font-size: 19px; margin-top: 14px; }
+.go-row { margin-top: 12px; }
+.chat { flex: 1; min-height: 0; padding: 14px 18px; }
+.chat-log { flex: 1; min-height: 0; max-height: none; }
+
+.ai-status {
+  display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,.08);
+  border: 1px solid #4f78a8; color: #cfe0f6; border-radius: 999px; padding: 6px 14px; font-size: 13px;
+}
+.ai-status .dot { width: 9px; height: 9px; border-radius: 50%; background: #8a99ad; }
+.ai-status.on { color: #fff; border-color: #3fbf8a; }
+.ai-status.on .dot { background: #3fd69b; box-shadow: 0 0 0 4px rgba(63, 214, 155, .25); }
+.toast { max-width: 80vw; border-radius: 16px; text-align: center; }
+.chat-log { min-height: 96px; }
+.examples { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; flex: none; }
+.example { white-space: nowrap; flex: none; }

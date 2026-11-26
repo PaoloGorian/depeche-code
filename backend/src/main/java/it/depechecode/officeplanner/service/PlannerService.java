@@ -49,9 +49,17 @@ public class PlannerService {
     }
 
     public AiText summary(String userId) {
+        return summary(userId, null);
+    }
+
+    public AiText summary(String userId, String latestChange) {
         OfficeData data = repository.snapshot();
         User user = requireUser(data, userId);
-        return narrator.weekSummary(user, engine.recommend(user, data), data);
+        return narrator.weekSummary(user, engine.recommend(user, data), data, latestChange);
+    }
+
+    public AiText aiPing() {
+        return narrator.ping();
     }
 
     public AiText inviteDraft(String fromUserId, String date, List<String> toUserIds) {

@@ -55,7 +55,8 @@ public class ChatService {
         repository.setDayStatus(c.userId(), new DayStatus(c.date(), c.officeNeed(), c.note()));
         User user = repository.snapshot().user(c.userId()).orElseThrow();
 
-        return new ChatResult(true, confirmation(user, c), c, user.id(), planner.summary(user.id()));
+        String reply = confirmation(user, c);
+        return new ChatResult(true, reply, c, user.id(), planner.summary(user.id(), reply));
     }
 
     private static String confirmation(User user, ChatCommand c) {

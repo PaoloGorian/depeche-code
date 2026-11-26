@@ -32,6 +32,18 @@ public class AiNarrator {
     }
 
     public AiText weekSummary(User user, Recommendation rec, OfficeData data) {
+        return weekSummary(user, rec, data, null);
+    }
+
+    /** Verifica reale dell'LLM: chiede una risposta che un template non può dare. */
+    public AiText ping() {
+        return llm.complete("Rispondi in italiano con una sola frase breve.",
+                        "Scrivi un saluto di benvenuto originale per un team di sviluppatori, diverso ogni volta.")
+                .map(t -> new AiText(t, "llm", llm.providerName()))
+                .orElseGet(() -> new AiText("AI non raggiungibile: uso i testi a template.", "template", "template"));
+    }
+
+    public AiText weekSummary(User user, Recommendation rec, OfficeData data, String latestChange) {
         String facts = rec.days().stream()
                 .map(d -> dayLabel(d.date()) + ": " + d.verdict() + " (punteggio " + d.score() + ", area "
                         + areaName(d.areaId(), data) + "). Motivi: " + String.join("; ", d.reasons()))
@@ -41,14 +53,19 @@ public class AiNarrator {
                 Raccomandazione della settimana calcolata dal motore:
                 %s
 
+                %s
                 Scrivi un consiglio di massimo 3 frasi: quali giorni andare in ufficio e perché,
-                citando i colleghi chiave e l'eventuale mentorship. Se ci sono giorni STAY, consiglia il lavoro focalizzato da remoto.
+                citando gli impegni, i colleghi chiave e l'eventuale mentorship. Se ci sono giorni STAY, consiglia il lavoro focalizzato da remoto.
+                Se c'è un ultimo aggiornamento, comincia citandolo e spiega come cambia il piano.
                 """.formatted(user.fullName(), user.seniority(), user.skills(), user.team(),
-                user.minOfficeDays(), facts);
+                user.minOfficeDays(), facts,
+                latestChange == null ? "" : "Ultimo aggiornamento appena inserito: " + latestChange);
 
         return llm.complete(SYSTEM, prompt)
                 .map(t -> new AiText(t, "llm", llm.providerName()))
-                .orElseGet(() -> new AiText(templateSummary(user, rec, data), "template", "template"));
+                .orElseGet(() -> new AiText(
+                        (latestChange == null ? "" : latestChange + " ") + templateSummary(user, rec, data),
+                        "template", "template"));
     }
 
     public AiText inviteDraft(User from, List<User> to, DayRecommendation day, OfficeData data) {
@@ -74,11 +91,12 @@ public class AiNarrator {
             return "Ciao " + user.firstName() + ", questa settimana non ci sono motivi forti per andare in ufficio: "
                     + "goditi il lavoro focalizzato da remoto.";
         }
-        String days = go.stream().map(d -> dayLabel(d.date())).collect(Collectors.joining(" e "));
+        String days = go.stream()
+                .map(d -> dayLabel(d.date()) + (d.note() == null ? "" : " (" + d.note() + ")"))
+                .collect(Collectors.joining(" e "));
         DayRecommendation best = go.get(0);
-        String why = best.reasons().isEmpty() ? "" : " Il motivo principale: " + best.reasons().get(0) + ".";
         return "Ciao " + user.firstName() + ", ti consiglio l'ufficio " + days + " in "
-                + areaName(best.areaId(), data) + "." + why + " Negli altri giorni resta da remoto per il lavoro focalizzato.";
+                + areaName(best.areaId(), data) + ". Negli altri giorni resta da remoto per il lavoro focalizzato.";
     }
 
     private String templateInvite(User from, String names, DayRecommendation day, OfficeData data) {

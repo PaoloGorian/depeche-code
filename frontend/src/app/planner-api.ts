@@ -48,6 +48,10 @@ export class PlannerApi {
     return this.http.post<ChatResult>(`${this.base}/chat`, { userId, message });
   }
 
+  aiPing(): Observable<AiText> {
+    return this.http.get<AiText>(`${this.base}/ai/ping`);
+  }
+
   today(): Observable<{ date: string }> {
     return this.http.get<{ date: string }>(`${this.base}/today`);
   }

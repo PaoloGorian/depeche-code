@@ -69,23 +69,23 @@ import { buildScene } from './office-map.layout';
 
       <footer class="legend">
         <span><svg viewBox="-14 -29 28 28" width="18" height="18"><g class="pin pin-senior"><circle cx="0" cy="-15" r="12" class="pin-face" /><circle cx="0" cy="-17.5" r="3.5" class="pin-head" /><path d="M-6.25 -7.5 C-5.6 -11 -3 -13 0 -13 S5.6 -11 6.25 -7.5 Z" class="pin-head" /></g></svg>Senior Randstad</span>
-        <span><svg viewBox="-14 -29 28 28" width="18" height="18"><g class="pin pin-junior"><circle cx="0" cy="-15" r="12" class="pin-face" /><circle cx="0" cy="-17.5" r="3.5" class="pin-head" /><path d="M-6.25 -7.5 C-5.6 -11 -3 -13 0 -13 S5.6 -11 6.25 -7.5 Z" class="pin-head" /></g></svg>Junior · studenti TTF</span>
+        <span><svg viewBox="-14 -29 28 28" width="18" height="18"><g class="pin pin-junior"><circle cx="0" cy="-15" r="12" class="pin-face" /><circle cx="0" cy="-17.5" r="3.5" class="pin-head" /><path d="M-6.25 -7.5 C-5.6 -11 -3 -13 0 -13 S5.6 -11 6.25 -7.5 Z" class="pin-head" /></g></svg>Junior</span>
         <span><svg viewBox="-14 -29 28 28" width="18" height="18"><g class="pin pin-me"><circle cx="0" cy="-15" r="12" class="pin-face" /><circle cx="0" cy="-17.5" r="3.5" class="pin-head" /><path d="M-6.25 -7.5 C-5.6 -11 -3 -13 0 -13 S5.6 -11 6.25 -7.5 Z" class="pin-head" /></g></svg>Tu</span>
       </footer>
     </section>
   `,
   styles: `
-    :host { display: block; }
-    .map { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px 18px; }
-    .days { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; }
+    :host { display: block; height: 100%; min-height: 0; }
+    .map { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px 12px; height: 100%; display: flex; flex-direction: column; box-sizing: border-box; min-height: 0; }
+    .days { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
     .day {
       display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-      padding: 14px 16px 12px; border-radius: 16px; border: 1px solid var(--line);
+      padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); min-width: 0;
       background: var(--bg); text-align: left; transition: transform .15s ease, box-shadow .15s ease;
     }
     .day:hover { transform: translateY(-2px); }
     .day-name { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: capitalize; }
-    .day-verdict { font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -.02em; color: var(--stay); }
+    .day-verdict { font-size: clamp(18px, 2.1vw, 34px); font-weight: 800; line-height: 1; letter-spacing: -.02em; color: var(--stay); }
     .day.go { background: var(--rd-blue-50); border-color: #c9ddf5; }
     .day.go .day-verdict { color: var(--go); }
     .day.active { background: var(--rd-navy); border-color: var(--rd-navy); box-shadow: 0 10px 24px rgba(16, 58, 108, .22); }
@@ -97,7 +97,7 @@ import { buildScene } from './office-map.layout';
     .count b { font-size: 22px; }
     .me-line { color: var(--muted); }
     @media (max-width: 700px) { .day-verdict { font-size: 22px; } .day { padding: 10px; } }
-    .iso { display: block; width: 100%; height: auto; margin-top: 8px; }
+    .iso { display: block; width: 100%; flex: 1; min-height: 0; height: 100%; margin-top: 6px; }
     .pin-shadow { fill: var(--rd-navy); opacity: .16; }
     .pin-face { stroke-width: 2; }
     .pin-senior .pin-face { fill: var(--rd-navy); stroke: #fff; }
