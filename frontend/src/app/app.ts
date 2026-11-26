@@ -44,6 +44,11 @@ export class App implements OnInit {
     return [...groups.entries()].map(([team, members]) => ({ team, members }));
   });
 
+  /** Verdetto per giorno, usato dalla mappa per marcare i giorni GO/STAY. */
+  readonly verdicts = computed<Record<string, 'GO' | 'STAY'>>(() =>
+    Object.fromEntries((this.recommendation()?.days ?? []).map((d) => [d.date, d.verdict])),
+  );
+
   readonly goCount = computed(() => this.recommendation()?.days.filter((d) => d.verdict === 'GO').length ?? 0);
 
   /** Matrice presenze: per ogni area e giorno, posti occupati e quanti del team dell'utente. */

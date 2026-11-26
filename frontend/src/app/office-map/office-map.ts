@@ -1,5 +1,5 @@
 import { Component, computed, input, signal } from '@angular/core';
-import { Area, Booking, User } from '../models';
+import { Area, Booking, User, Verdict } from '../models';
 import { buildScene } from './office-map.layout';
 
 /**
@@ -15,11 +15,19 @@ import { buildScene } from './office-map.layout';
         <div>
           <p class="eyebrow">{{ dayLong(currentDay()) }} · solo visualizzazione</p>
           <h2>{{ inOffice() }} in Box</h2>
+          @if (verdicts()[currentDay()]; as v) {
+            <p class="me-line">{{ v === 'GO' ? 'Per te è un giorno GO: vai in ufficio' : 'Per te è STAY: resta in remoto' }}</p>
+          }
         </div>
         <div class="days" role="tablist" aria-label="Giorno">
           @for (d of week(); track d) {
             <button type="button" role="tab" [class.active]="d === currentDay()" [attr.aria-selected]="d === currentDay()"
-                    (click)="day.set(d)">{{ dayShort(d) }}</button>
+                    (click)="day.set(d)">
+              {{ dayShort(d) }}
+              @if (verdicts()[d]; as v) {
+                <span class="verdict verdict-{{ v.toLowerCase() }}">{{ v }}</span>
+              }
+            </button>
           }
         </div>
       </header>
@@ -69,29 +77,34 @@ import { buildScene } from './office-map.layout';
   `,
   styles: `
     :host { display: block; }
-    .map { background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 22px 24px 18px; }
+    .map { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px 18px; }
     .map-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
     .eyebrow { margin: 0; font-size: 13px; color: var(--muted); }
     h2 { margin: 4px 0 0; font-size: 30px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); }
+    .me-line { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
     .days { display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: var(--bg); }
-    .days button { border: 0; background: transparent; color: var(--muted); padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-transform: capitalize; }
-    .days button.active { background: var(--ink); color: #fff; }
+    .days button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--muted); padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-transform: capitalize; }
+    .days button.active { background: var(--rd-navy); color: #fff; }
+    .verdict { font-size: 10px; font-weight: 800; letter-spacing: .04em; padding: 2px 6px; border-radius: 999px; }
+    .verdict-go { background: var(--go); color: #fff; }
+    .verdict-stay { background: var(--line); color: var(--stay); }
+    .active .verdict-stay { background: rgba(255, 255, 255, .18); color: #fff; }
     .iso { display: block; width: 100%; height: auto; margin-top: 8px; }
-    .pin-shadow { fill: #14142b; opacity: .16; }
+    .pin-shadow { fill: var(--rd-navy); opacity: .16; }
     .pin-face { stroke-width: 2; }
-    .pin-senior .pin-face { fill: #14142b; stroke: #fff; }
+    .pin-senior .pin-face { fill: var(--rd-navy); stroke: #fff; }
     .pin-senior .pin-head { fill: #fff; }
-    .pin-junior .pin-face { fill: #fff; stroke: #14142b; }
-    .pin-junior .pin-head { fill: #14142b; }
+    .pin-junior .pin-face { fill: #fff; stroke: var(--rd-navy); }
+    .pin-junior .pin-head { fill: var(--rd-navy); }
     .pin-me .pin-face { fill: var(--accent); stroke: #fff; }
     .pin-me .pin-head { fill: #fff; }
     .pin-halo { fill: var(--accent); opacity: .22; }
     .pin { cursor: default; }
-    .label-pill { fill: #fff; filter: drop-shadow(0 4px 10px rgba(20, 20, 43, .1)); }
+    .label-pill { fill: #fff; filter: drop-shadow(0 4px 10px rgba(16, 58, 108, .12)); }
     .label text { font-size: 11.5px; }
     .label-name { font-weight: 600; fill: var(--ink); }
     .label-count { font-weight: 500; fill: var(--muted); }
-    .label-count.full { fill: var(--accent); }
+    .label-count.full { fill: var(--warn); }
     .legend { display: flex; justify-content: flex-end; gap: 20px; flex-wrap: wrap; font-size: 12px; color: var(--ink); }
     .legend span { display: inline-flex; align-items: center; gap: 7px; }
   `,
@@ -102,6 +115,8 @@ export class OfficeMap {
   readonly users = input.required<User[]>();
   readonly week = input.required<string[]>();
   readonly meId = input<string | null>(null);
+  /** Verdetto GO/STAY dell'utente per giorno (dal motore di raccomandazione). */
+  readonly verdicts = input<Record<string, Verdict>>({});
 
   /** Giorno scelto dall'utente; se nullo si usa oggi (se e' nella settimana) o il primo giorno. */
   readonly day = signal<string | null>(null);

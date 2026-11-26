@@ -42,9 +42,9 @@ export interface IsoScene {
   labels: IsoLabel[];
 }
 
-/** Colore di ogni zona per skill: le uniche note di colore della UI. */
+/** Colore di ogni zona per skill (FE = blu Randstad): le uniche note di colore della mappa. */
 export const SKILL_COLORS: Record<Skill, string> = {
-  FE: '#2F6BFF',
+  FE: '#2175D9',
   BE: '#7B5CFF',
   DATA: '#12B8A0',
   EMBEDDED: '#FF5A36',
@@ -138,9 +138,9 @@ export function buildScene(
   const T = 18;
   const P = project;
   const floor: IsoPoly[] = [
-    { points: pts([P(0, worldD, -T), P(WORLD_W, worldD, -T), P(WORLD_W, worldD), P(0, worldD)]), fill: '#DCDCE4' },
-    { points: pts([P(WORLD_W, 0, -T), P(WORLD_W, worldD, -T), P(WORLD_W, worldD), P(WORLD_W, 0)]), fill: '#CBCBD6' },
-    { points: pts([P(0, 0), P(WORLD_W, 0), P(WORLD_W, worldD), P(0, worldD)]), fill: '#FFFFFF' },
+    { points: pts([P(0, worldD, -T), P(WORLD_W, worldD, -T), P(WORLD_W, worldD), P(0, worldD)]), fill: '#DDE5EF' },
+    { points: pts([P(WORLD_W, 0, -T), P(WORLD_W, worldD, -T), P(WORLD_W, worldD), P(WORLD_W, 0)]), fill: '#C9D5E3' },
+    { points: pts([P(0, 0), P(WORLD_W, 0), P(WORLD_W, worldD), P(0, worldD)]), fill: '#F3F6FA' },
   ];
 
   const zones: IsoScene['zones'] = [];
