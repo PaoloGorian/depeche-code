@@ -140,7 +140,7 @@ export function buildScene(
   const floor: IsoPoly[] = [
     { points: pts([P(0, worldD, -T), P(WORLD_W, worldD, -T), P(WORLD_W, worldD), P(0, worldD)]), fill: '#DDE5EF' },
     { points: pts([P(WORLD_W, 0, -T), P(WORLD_W, worldD, -T), P(WORLD_W, worldD), P(WORLD_W, 0)]), fill: '#C9D5E3' },
-    { points: pts([P(0, 0), P(WORLD_W, 0), P(WORLD_W, worldD), P(0, worldD)]), fill: '#F3F6FA' },
+    { points: pts([P(0, 0), P(WORLD_W, 0), P(WORLD_W, worldD), P(0, worldD)]), fill: '#FFFFFF' },
   ];
 
   const zones: IsoScene['zones'] = [];

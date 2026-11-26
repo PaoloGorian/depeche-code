@@ -1,188 +1,178 @@
-<header class="topbar">
-  <div class="brand">
-    <dc-logo [size]="46" />
-    <div>
-      <p class="brand-team">Depeche Code</p>
-      <h1>Should I Stay or Should I Go?</h1>
-    </div>
-  </div>
-  <div class="topbar-right">
-    <span class="product">Smart Office Planner</span>
-    <button class="ghost" type="button" (click)="resetDemo()">Reset demo</button>
-    <div class="logo-slot" title="Inserire il logo aziendale ufficiale">Logo aziendale</div>
-  </div>
-</header>
-
-<div class="layout">
-  <aside class="sidebar">
-    <h2 class="section-title">Chi sei?</h2>
-    @for (group of teams(); track group.team) {
-      <div class="team-group">
-        <p class="team-name">{{ group.team }}</p>
-        @for (u of group.members; track u.id) {
-          <button type="button" class="person" [class.active]="u.id === selectedUserId()" (click)="selectUser(u.id)">
-            <span class="avatar" [class.senior]="u.seniority === 'SENIOR'">{{ initials(u) }}</span>
-            <span class="person-name">{{ u.firstName }} {{ u.lastName }}</span>
-            <span class="person-meta">{{ u.skills.join('/') }}</span>
-          </button>
-        }
+@if (!loggedIn()) {
+  <!-- 01 · Login (layout Figma): titolo + mappa a sinistra, card di accesso a destra -->
+  <div class="login">
+    <section class="login-hero">
+      <div class="brand">
+        <dc-logo [size]="40" />
+        <span class="brand-name">Depeche Code</span>
       </div>
-    }
-  </aside>
+      <h1 class="login-title">Should I stay<br />or should I go?</h1>
+      <div class="login-map">
+        <dc-office-map
+          [compact]="true"
+          [areas]="areas()"
+          [bookings]="bookings()"
+          [users]="users()"
+          [week]="week()"
+          [day]="mapDay()"
+        />
+      </div>
+      <p class="login-foot">Depeche Code · senior Randstad × studenti TTF</p>
+    </section>
 
-  <main class="content">
+    <section class="login-card">
+      <h2>Bentornato in Box</h2>
+      <p class="muted">Accedi per vedere chi c'è e quando ti conviene venire.</p>
+      <form (submit)="login(); $event.preventDefault()">
+        <label class="field">
+          <span>Email aziendale</span>
+          <input type="email" autocomplete="username" [ngModel]="loginEmail()" (ngModelChange)="loginEmail.set($event)" name="email" />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" autocomplete="current-password" value="demo-password" name="password" />
+        </label>
+        @if (loginError(); as err) {
+          <p class="error">{{ err }}</p>
+        }
+        <button type="submit" class="btn-primary wide">Entra</button>
+      </form>
+      <label class="field demo">
+        <span>Accesso demo</span>
+        <select [ngModel]="loginEmail()" (ngModelChange)="loginEmail.set($event)">
+          @for (group of teams(); track group.team) {
+            <optgroup [label]="group.team">
+              @for (u of group.members; track u.id) {
+                <option [value]="u.email">{{ u.firstName }} {{ u.lastName }} · {{ u.seniority === 'SENIOR' ? 'Senior' : 'Junior' }} {{ u.skills.join('/') }}</option>
+              }
+            </optgroup>
+          }
+        </select>
+      </label>
+    </section>
+  </div>
+} @else {
+  <!-- 02 · Mappa live (layout Figma): top bar minimale, mappa al centro, card "Oggi sei qui" -->
+  <header class="topbar">
+    <div class="brand">
+      <dc-logo [size]="36" />
+      <span class="brand-name">Depeche Code</span>
+    </div>
+    <div class="topbar-right">
+      <button type="button" class="btn-primary" (click)="openPlanner()">Pianifica con l'AI</button>
+      @if (selectedUser(); as me) {
+        <button type="button" class="me" [title]="'Esci (' + me.firstName + ' ' + me.lastName + ')'" (click)="logout()">
+          <span class="avatar me-avatar">{{ initials(me) }}</span>
+        </button>
+      }
+    </div>
+  </header>
+
+  <main class="stage">
+    <dc-office-map
+      [areas]="areas()"
+      [bookings]="bookings()"
+      [users]="users()"
+      [week]="week()"
+      [meId]="selectedUserId()"
+      [verdicts]="verdicts()"
+      [(day)]="mapDay"
+    />
+
     @if (selectedUser(); as me) {
-      <section class="profile card">
-        <span class="avatar xl" [class.senior]="me.seniority === 'SENIOR'">{{ initials(me) }}</span>
-        <div class="profile-main">
-          <h2>{{ me.firstName }} {{ me.lastName }}</h2>
-          <div class="chips">
-            <span class="chip" [class.chip-senior]="me.seniority === 'SENIOR'">{{ me.seniority }}</span>
-            @for (s of me.skills; track s) {
-              <span class="chip chip-skill">{{ s }}</span>
-            }
-            <span class="chip chip-team">Team {{ me.team }}</span>
-            <span class="chip">{{ me.minOfficeDays === 0 ? 'Full remote' : me.minOfficeDays + ' gg/settimana in ufficio' }}</span>
-          </div>
-        </div>
-        <div class="profile-kpi">
-          <span class="kpi-value">{{ goCount() }}</span>
-          <span class="kpi-label">giorni GO consigliati</span>
-        </div>
-      </section>
+      <aside class="here-card">
+        @if (myBooking(); as b) {
+          <p class="here-label">Oggi sei qui</p>
+          <p class="here-title">{{ areaName(b.areaId) }}</p>
+          <p class="here-sub">{{ teamTodayText() }}</p>
+        } @else if (dayRec(); as d) {
+          @if (d.verdict === 'GO') {
+            <p class="here-label">Giorno GO · area consigliata</p>
+            <p class="here-title">{{ areaName(d.areaId) }}</p>
+            <p class="here-sub">{{ d.note ?? 'Il tuo team sarà in ufficio' }}</p>
+            <button type="button" class="btn-primary small" [disabled]="d.areaFull" (click)="book(d)">Prenota</button>
+          } @else {
+            <p class="here-label">Giorno STAY</p>
+            <p class="here-title">Resta in remoto</p>
+            <p class="here-sub">{{ d.areaFull ? 'La tua area è al completo' : 'Il tuo team non sarà in ufficio' }}</p>
+          }
+        } @else {
+          <p class="here-label">Ciao {{ me.firstName }}</p>
+          <p class="here-title">Sto calcolando la tua settimana…</p>
+        }
+      </aside>
+    }
+  </main>
 
-      <dc-office-map
-        [areas]="areas()"
-        [bookings]="bookings()"
-        [users]="users()"
-        [week]="week()"
-        [meId]="selectedUserId()"
-        [verdicts]="verdicts()"
-      />
+  <!-- Pannello "Pianifica con l'AI": consiglio della settimana, prenotazioni e inviti -->
+  @if (plannerOpen()) {
+    <div class="scrim" (click)="plannerOpen.set(false)"></div>
+    <aside class="planner" role="dialog" aria-modal="true" aria-label="Pianifica con l'AI">
+      <header class="planner-head">
+        <h2>Pianifica con l'AI</h2>
+        <button type="button" class="icon" aria-label="Chiudi" (click)="plannerOpen.set(false)">×</button>
+      </header>
 
-      <section class="card ai-card">
-        <div class="ai-head">
-          <h2 class="section-title">Il consiglio della settimana</h2>
+      <section class="advice">
+        <div class="advice-head">
+          <span class="label">Il consiglio della settimana</span>
           @if (summary(); as s) {
             <span class="ai-badge" [class.template]="s.source === 'template'">
-              {{ s.source === 'llm' ? 'Generato da AI · ' + s.provider : 'Testo a template (AI non configurata)' }}
+              {{ s.source === 'llm' ? 'AI · ' + s.provider : 'Testo a template' }}
             </span>
           }
         </div>
         @if (summaryLoading()) {
-          <p class="ai-text loading">L'AI sta incrociando agende e presenze…</p>
+          <p class="advice-text loading">L'AI sta incrociando agende e presenze…</p>
         } @else {
-          <p class="ai-text">{{ summary()?.text }}</p>
+          <p class="advice-text">{{ summary()?.text }}</p>
         }
       </section>
 
       @if (recommendation(); as rec) {
-        <section class="days">
+        <ul class="plan-days">
           @for (day of rec.days; track day.date) {
-            <article class="day card" [class.go]="day.verdict === 'GO'" [class.full]="day.areaFull">
-              <header class="day-head">
-                <span class="day-name">{{ dayLabel(day.date) }}</span>
-                <span class="need need-{{ day.officeNeed.toLowerCase() }}">{{ needLabel(day.officeNeed) }}</span>
-              </header>
-
-              <div class="verdict">{{ day.verdict }}</div>
-              <p class="verdict-sub">{{ day.verdict === 'GO' ? 'Vai in ufficio' : 'Resta in remoto' }}</p>
-
-              @if (day.note) {
-                <p class="note">{{ day.note }}</p>
-              }
-
-              <div class="area-line">
-                <span class="area-name">{{ areaName(day.areaId) }}</span>
-                <span class="seats" [class.seats-full]="day.areaFull">
-                  {{ day.areaFull ? 'Al completo' : day.areaFreeSeats + ' liberi' }}
-                </span>
-              </div>
-
-              <div class="score">
-                <div class="score-bar"><span [style.width.%]="scoreWidth(day.score)"></span></div>
-                <span class="score-value">{{ day.score }}</span>
-              </div>
-
-              <ul class="reasons">
-                @for (r of expanded().has(day.date) ? day.reasons : day.reasons.slice(0, 3); track $index) {
-                  <li>{{ r }}</li>
-                }
-              </ul>
-              @if (day.reasons.length > 3) {
-                <button type="button" class="link" (click)="toggleReasons(day.date)">
-                  {{ expanded().has(day.date) ? 'Mostra meno' : 'Tutti i motivi (' + day.reasons.length + ')' }}
-                </button>
-              }
-
-              @if (day.verdict === 'GO') {
-                <div class="day-actions">
-                  @if (day.alreadyBooked) {
-                    <span class="booked">Prenotato ✓</span>
-                  } @else {
-                    <button type="button" class="primary" [disabled]="day.areaFull" (click)="book(day)">Prenota</button>
-                  }
-                  @if (day.inviteUserIds.length) {
-                    <button type="button" class="secondary" (click)="openInvite(day)">
-                      Invita {{ day.inviteUserIds.length }}
-                    </button>
+            <li class="plan-day" [class.go]="day.verdict === 'GO'">
+              <div class="plan-main">
+                <span class="plan-verdict">{{ day.verdict }}</span>
+                <div>
+                  <p class="plan-date">{{ dayLabel(day.date) }}</p>
+                  <p class="plan-area">
+                    {{ areaName(day.areaId) }}
+                    · {{ day.areaFull ? 'al completo' : day.areaFreeSeats + ' liberi' }}
+                  </p>
+                  @if (day.note) {
+                    <p class="plan-note">{{ day.note }}</p>
                   }
                 </div>
-                @if (day.inviteUserIds.length) {
-                  <div class="invitees">
-                    @for (id of day.inviteUserIds; track id) {
-                      <span class="avatar sm" [class.senior]="userById(id)?.seniority === 'SENIOR'"
-                            [title]="userById(id)?.firstName + ' ' + userById(id)?.lastName">{{ initials(userById(id)) }}</span>
-                    }
-                  </div>
-                }
+              </div>
+              @if (day.verdict === 'GO') {
+                <div class="plan-actions">
+                  @if (day.alreadyBooked) {
+                    <span class="booked">Prenotato</span>
+                  } @else {
+                    <button type="button" class="btn-primary small" [disabled]="day.areaFull" (click)="book(day)">Prenota</button>
+                  }
+                  @if (day.inviteUserIds.length) {
+                    <button type="button" class="btn-ghost small" (click)="openInvite(day)">Invita {{ day.inviteUserIds.length }}</button>
+                  }
+                </div>
               }
-            </article>
+            </li>
           }
-        </section>
+        </ul>
       }
 
-      <section class="card">
-        <div class="ai-head">
-          <h2 class="section-title">Matrice presenze</h2>
-          <span class="legend">posti occupati / totali · <b class="team-dot"></b> colleghi del team {{ me.team }}</span>
-        </div>
-        <table class="heatmap">
-          <thead>
-            <tr>
-              <th>Area</th>
-              @for (d of week(); track d) {
-                <th>{{ dayShort(d) }}</th>
-              }
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of heatmap(); track row.area.id) {
-              <tr>
-                <th>
-                  {{ row.area.name }}
-                  <small>{{ row.area.skill }} · {{ row.area.seats }} posti</small>
-                </th>
-                @for (cell of row.cells; track cell.date) {
-                  <td [style.--heat]="cell.ratio" [class.cell-full]="cell.ratio >= 1">
-                    <span class="cell-count">{{ cell.occupied }}/{{ row.area.seats }}</span>
-                    @if (cell.team) {
-                      <span class="cell-team">{{ cell.team }}</span>
-                    }
-                  </td>
-                }
-              </tr>
-            }
-          </tbody>
-        </table>
-      </section>
-    }
-  </main>
-</div>
+      <footer class="planner-foot">
+        <button type="button" class="link" (click)="resetDemo()">Reset demo</button>
+      </footer>
+    </aside>
+  }
+}
 
 @if (invite(); as dlg) {
   <div class="overlay" (click)="invite.set(null)">
-    <div class="dialog card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+    <div class="dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
       <h2>Invita i colleghi chiave · {{ dayLabel(dlg.day.date) }}</h2>
       <p class="muted">{{ areaName(dlg.day.areaId) }}. Scegli chi invitare: il messaggio lo scrive l'AI.</p>
       <div class="invite-list">
@@ -197,20 +187,20 @@
           }
         }
       </div>
-      <div class="ai-head">
-        <span class="section-title">Messaggio</span>
+      <div class="advice-head">
+        <span class="label">Messaggio</span>
         @if (dlg.draft; as d) {
           <span class="ai-badge" [class.template]="d.source === 'template'">
-            {{ d.source === 'llm' ? 'Generato da AI · ' + d.provider : 'Testo a template' }}
+            {{ d.source === 'llm' ? 'AI · ' + d.provider : 'Testo a template' }}
           </span>
         }
       </div>
       <textarea rows="6" [ngModel]="dlg.loading ? 'L’AI sta scrivendo…' : dlg.draft?.text ?? ''"
                 (ngModelChange)="updateDraftText($event)" [disabled]="dlg.loading"></textarea>
       <div class="dialog-actions">
-        <button type="button" class="ghost dark" (click)="invite.set(null)">Annulla</button>
-        <button type="button" class="secondary" (click)="generateDraft()" [disabled]="dlg.loading || !dlg.selected.size">Rigenera</button>
-        <button type="button" class="primary" (click)="sendInvite()" [disabled]="dlg.loading || !dlg.selected.size">Invia invito</button>
+        <button type="button" class="btn-ghost" (click)="invite.set(null)">Annulla</button>
+        <button type="button" class="btn-ghost" (click)="generateDraft()" [disabled]="dlg.loading || !dlg.selected.size">Rigenera</button>
+        <button type="button" class="btn-primary" (click)="sendInvite()" [disabled]="dlg.loading || !dlg.selected.size">Invia invito</button>
       </div>
     </div>
   </div>

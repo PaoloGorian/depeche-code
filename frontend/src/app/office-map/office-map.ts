@@ -1,4 +1,4 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, input, model } from '@angular/core';
 import { Area, Booking, User, Verdict } from '../models';
 import { buildScene } from './office-map.layout';
 
@@ -11,6 +11,7 @@ import { buildScene } from './office-map.layout';
   selector: 'dc-office-map',
   template: `
     <section class="map">
+      @if (!compact()) {
       <nav class="days" role="tablist" aria-label="Giorno della settimana">
         @for (d of week(); track d) {
           <button type="button" role="tab" class="day" [class.active]="d === currentDay()"
@@ -30,6 +31,7 @@ import { buildScene } from './office-map.layout';
           }
         </p>
       </header>
+      }
 
       <svg class="iso" [attr.viewBox]="scene().viewBox" role="img" aria-label="Mappa delle aree e delle persone in ufficio">
         @for (p of scene().floor; track $index) {
@@ -55,7 +57,7 @@ import { buildScene } from './office-map.layout';
             <path d="M-6.25 -7.5 C-5.6 -11 -3 -13 0 -13 S5.6 -11 6.25 -7.5 Z" class="pin-head" />
           </g>
         }
-        @for (l of scene().labels; track l.areaId) {
+        @for (l of compact() ? [] : scene().labels; track l.areaId) {
           <g class="label" [attr.transform]="'translate(' + l.x + ' ' + l.y + ')'">
             <rect [attr.x]="-l.width / 2" y="-13" [attr.width]="l.width" height="26" rx="13" class="label-pill" />
             <circle [attr.cx]="-l.width / 2 + 14" cy="0" r="4" [attr.fill]="l.color" />
@@ -67,16 +69,18 @@ import { buildScene } from './office-map.layout';
         }
       </svg>
 
+      @if (!compact()) {
       <footer class="legend">
         <span><svg viewBox="-14 -29 28 28" width="18" height="18"><g class="pin pin-senior"><circle cx="0" cy="-15" r="12" class="pin-face" /><circle cx="0" cy="-17.5" r="3.5" class="pin-head" /><path d="M-6.25 -7.5 C-5.6 -11 -3 -13 0 -13 S5.6 -11 6.25 -7.5 Z" class="pin-head" /></g></svg>Senior Randstad</span>
         <span><svg viewBox="-14 -29 28 28" width="18" height="18"><g class="pin pin-junior"><circle cx="0" cy="-15" r="12" class="pin-face" /><circle cx="0" cy="-17.5" r="3.5" class="pin-head" /><path d="M-6.25 -7.5 C-5.6 -11 -3 -13 0 -13 S5.6 -11 6.25 -7.5 Z" class="pin-head" /></g></svg>Junior · studenti TTF</span>
         <span><svg viewBox="-14 -29 28 28" width="18" height="18"><g class="pin pin-me"><circle cx="0" cy="-15" r="12" class="pin-face" /><circle cx="0" cy="-17.5" r="3.5" class="pin-head" /><path d="M-6.25 -7.5 C-5.6 -11 -3 -13 0 -13 S5.6 -11 6.25 -7.5 Z" class="pin-head" /></g></svg>Tu</span>
       </footer>
+      }
     </section>
   `,
   styles: `
     :host { display: block; }
-    .map { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px 18px; }
+    .map { background: transparent; }
     .days { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; }
     .day {
       display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
@@ -126,8 +130,11 @@ export class OfficeMap {
   /** Verdetto GO/STAY dell'utente per giorno (dal motore di raccomandazione). */
   readonly verdicts = input<Record<string, Verdict>>({});
 
-  /** Giorno scelto dall'utente; se nullo si usa oggi (se e' nella settimana) o il primo giorno. */
-  readonly day = signal<string | null>(null);
+  /** Versione ridotta (solo mappa, senza giorni/etichette/legenda), usata nel login. */
+  readonly compact = input(false);
+
+  /** Giorno mostrato (two-way binding); se nullo si usa oggi, se e' nella settimana, o il primo giorno. */
+  readonly day = model<string | null>(null);
 
   readonly currentDay = computed(() => {
     const week = this.week();

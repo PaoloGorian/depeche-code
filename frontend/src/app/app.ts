@@ -34,6 +34,13 @@ export class App implements OnInit {
   readonly toast = signal<string | null>(null);
   readonly expanded = signal<Set<string>>(new Set());
 
+  // UI Figma: login, giorno mostrato sulla mappa, pannello "Pianifica con l'AI"
+  readonly loggedIn = signal(false);
+  readonly loginEmail = signal('');
+  readonly loginError = signal<string | null>(null);
+  readonly plannerOpen = signal(false);
+  readonly mapDay = signal<string | null>(null);
+
   readonly selectedUser = computed(() => this.users().find((u) => u.id === this.selectedUserId()) ?? null);
 
   readonly teams = computed(() => {
@@ -51,17 +58,26 @@ export class App implements OnInit {
 
   readonly goCount = computed(() => this.recommendation()?.days.filter((d) => d.verdict === 'GO').length ?? 0);
 
-  /** Matrice presenze: per ogni area e giorno, posti occupati e quanti del team dell'utente. */
-  readonly heatmap = computed(() => {
+  /** Prenotazione dell'utente nel giorno mostrato sulla mappa. */
+  readonly myBooking = computed(
+    () => this.bookings().find((b) => b.userId === this.selectedUserId() && b.date === this.mapDay() && b.areaId) ?? null,
+  );
+
+  /** Raccomandazione del motore per il giorno mostrato sulla mappa. */
+  readonly dayRec = computed(() => this.recommendation()?.days.find((d) => d.date === this.mapDay()) ?? null);
+
+  /** Frase della card "Oggi sei qui": quanti colleghi del team sono nella stessa area. */
+  readonly teamTodayText = computed(() => {
     const me = this.selectedUser();
-    return this.areas().map((area) => ({
-      area,
-      cells: this.week().map((date) => {
-        const inArea = this.bookings().filter((b) => b.areaId === area.id && b.date === date);
-        const team = me ? inArea.filter((b) => this.userById(b.userId)?.team === me.team).length : 0;
-        return { date, occupied: inArea.length, ratio: inArea.length / area.seats, team };
-      }),
-    }));
+    const booking = this.myBooking();
+    if (!me || !booking) return '';
+    const mates = this.bookings()
+      .filter((b) => b.date === booking.date && b.areaId === booking.areaId && b.userId !== me.id)
+      .map((b) => this.userById(b.userId))
+      .filter((u): u is User => !!u);
+    if (!mates.length) return 'Per ora sei l\'unico in quest\'area';
+    const names = mates.slice(0, 2).map((u) => u.firstName).join(' e ');
+    return mates.length > 2 ? `Con ${names} e altri ${mates.length - 2}` : `Con ${names}`;
   });
 
   ngOnInit(): void {
@@ -75,8 +91,32 @@ export class App implements OnInit {
       this.users.set(users);
       this.areas.set(areas);
       this.bookings.set(bookings);
-      this.selectUser(users[0]?.id);
+      const today = new Date().toISOString().slice(0, 10);
+      this.mapDay.set(week.includes(today) ? today : (week[0] ?? null));
+      this.loginEmail.set(users[0]?.email ?? '');
     });
+  }
+
+  login(): void {
+    const email = this.loginEmail().trim().toLowerCase();
+    const user = this.users().find((u) => u.email.toLowerCase() === email);
+    if (!user) {
+      this.loginError.set('Email non trovata tra gli utenti demo');
+      return;
+    }
+    this.loginError.set(null);
+    this.loggedIn.set(true);
+    this.selectUser(user.id);
+  }
+
+  logout(): void {
+    this.plannerOpen.set(false);
+    this.invite.set(null);
+    this.loggedIn.set(false);
+  }
+
+  openPlanner(): void {
+    this.plannerOpen.set(true);
   }
 
   selectUser(id: string | undefined): void {
