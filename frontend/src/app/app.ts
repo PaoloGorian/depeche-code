@@ -39,6 +39,16 @@ export class App implements OnInit {
   readonly loginEmail = signal('');
   readonly loginError = signal<string | null>(null);
   readonly plannerOpen = signal(false);
+
+  // chat: aggiornare gli impegni in linguaggio naturale
+  readonly chatText = signal('');
+  readonly chatBusy = signal(false);
+  readonly chatLog = signal<{ from: 'me' | 'ai'; text: string; ok?: boolean; parser?: string }[]>([]);
+  readonly examples = [
+    'Oggi ho un workshop obbligatorio',
+    'Venerdì Marco Bianchi ha una demo al cliente',
+    'Annulla il mio impegno di lunedì',
+  ];
   readonly mapDay = signal<string | null>(null);
 
   readonly selectedUser = computed(() => this.users().find((u) => u.id === this.selectedUserId()) ?? null);
@@ -238,6 +248,33 @@ export class App implements OnInit {
 
   scoreWidth(score: number): number {
     return Math.min(100, Math.round((score / 160) * 100));
+  }
+
+  /** Invia la frase al backend: l'AI la trasforma in un impegno, poi il consiglio della settimana viene rigenerato. */
+  sendChat(text = this.chatText()): void {
+    const message = text.trim();
+    if (!message || this.chatBusy()) return;
+    this.chatLog.update((log) => [...log, { from: 'me', text: message }]);
+    this.chatText.set('');
+    this.chatBusy.set(true);
+    this.summaryLoading.set(true);
+    this.api.chat(this.selectedUserId(), message).subscribe({
+      next: (res) => {
+        this.chatLog.update((log) => [...log, { from: 'ai', text: res.reply, ok: res.ok, parser: res.command?.parser }]);
+        // il consiglio mostrato e' sempre quello dell'utente loggato: se il comando riguarda un collega lo ricalcoliamo
+        const mine = res.userId === this.selectedUserId();
+        if (mine) this.summary.set(res.summary);
+        this.summaryLoading.set(false);
+        this.chatBusy.set(false);
+        this.api.users().subscribe((u) => this.users.set(u));
+        this.refresh(!mine);
+      },
+      error: () => {
+        this.chatLog.update((log) => [...log, { from: 'ai', text: 'Errore di comunicazione con il server.', ok: false }]);
+        this.summaryLoading.set(false);
+        this.chatBusy.set(false);
+      },
+    });
   }
 
   private showToast(message: string): void {

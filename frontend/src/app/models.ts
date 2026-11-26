@@ -60,3 +60,19 @@ export interface AiText {
   source: 'llm' | 'template';
   provider: string;
 }
+
+export interface ChatCommand {
+  userId: string;
+  date: string;
+  officeNeed: OfficeNeed;
+  note: string | null;
+  parser: 'llm' | 'regole';
+}
+
+export interface ChatResult {
+  ok: boolean;
+  reply: string;
+  command: ChatCommand | null;
+  userId: string;
+  summary: AiText;
+}

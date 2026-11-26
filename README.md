@@ -17,23 +17,28 @@ Poi apri **http://localhost:8080**. Il frontend Angular è già compilato dentro
 
 In IntelliJ: *Open* sulla cartella `backend`, attendi l'import Maven, poi Run su `OfficePlannerApplication`.
 
-### Attivare l'AI (GitHub Models)
+### Attivare l'AI (Google Gemini, default)
 
-1. Su GitHub: *Settings → Developer settings → Fine-grained tokens*, crea un token con permesso **Models: read**.
-2. Esporta il token prima di avviare:
-   - macOS/Linux: `export GITHUB_TOKEN=github_pat_...`
-   - Windows PowerShell: `$env:GITHUB_TOKEN="github_pat_..."`
-   - IntelliJ: *Run configuration → Environment variables* → `GITHUB_TOKEN=github_pat_...`
+Imposta la chiave come variabile d'ambiente prima di avviare. **Non scriverla mai nei file: il repo è pubblico.**
+- IntelliJ: *Run → Edit Configurations → OfficePlannerApplication → Environment variables* → `GEMINI_API_KEY=...`
+- Windows PowerShell: `$env:GEMINI_API_KEY="..."` poi `mvn spring-boot:run`
 
-Senza token l'app funziona lo stesso: i testi arrivano da template e la UI lo segnala.
+Senza chiave l'app funziona lo stesso: testi a template e chat interpretata a regole, e la UI lo segnala.
 
-Per cambiare provider basta la configurazione, senza toccare il codice:
+Per cambiare provider basta la configurazione (endpoint compatibile OpenAI):
 
-| Variabile | Default | Esempi alternativi |
+| Variabile | Default (Gemini) | GitHub Models |
 |---|---|---|
-| `LLM_BASE_URL` | `https://models.github.ai/inference` | `https://api.openai.com/v1`, `http://localhost:11434/v1` (Ollama) |
-| `LLM_API_KEY` | valore di `GITHUB_TOKEN` | chiave OpenAI / Azure |
-| `LLM_MODEL` | `openai/gpt-4.1-mini` | `gpt-4o-mini`, `llama3.1` |
+| `LLM_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta/openai` | `https://models.github.ai/inference` |
+| `LLM_API_KEY` | valore di `GEMINI_API_KEY` | token GitHub con permesso Models: read |
+| `LLM_MODEL` | `gemini-2.5-flash` | `openai/gpt-4.1-mini` |
+| `LLM_REASONING_EFFORT` | `none` | vuoto |
+
+### Chat: aggiornare gli impegni in linguaggio naturale
+
+Nella landing c'è un campo chat: "oggi Chiara ha un workshop obbligatorio", "venerdì Marco Bianchi ha una demo al cliente", "annulla l'impegno di Chiara di lunedì".
+L'LLM trasforma la frase in un comando JSON validato (persona, giorno, REQUIRED/OPTIONAL/FREE, nota); se l'AI non risponde subentra un parser a regole.
+Il dato viene aggiornato e il **consiglio della settimana** della persona interessata viene rigenerato. Endpoint: `POST /api/chat {userId, message}`.
 
 ### Sviluppo frontend
 
@@ -96,6 +101,8 @@ frontend/  Angular 22 · standalone components · signals
 | POST | `/api/bookings` | prenota `{userId, date, areaId}` |
 | POST | `/api/invites/draft` | bozza invito (AI) `{fromUserId, date, toUserIds}` |
 | POST | `/api/invites/accept` | simula l'accettazione degli inviti |
+| POST | `/api/chat` | comando in linguaggio naturale, restituisce il consiglio aggiornato |
+| GET | `/api/today` | giorno corrente della demo |
 | POST | `/api/reset` | ripristina i dati demo |
 
 ## Script demo (3 minuti)

@@ -129,6 +129,34 @@
         }
       </section>
 
+      <section class="chat">
+        <span class="label">Aggiorna gli impegni in linguaggio naturale</span>
+        @if (chatLog().length) {
+          <div class="chat-log">
+            @for (m of chatLog(); track $index) {
+              <div class="bubble" [class.me]="m.from === 'me'" [class.err]="m.ok === false">
+                {{ m.text }}
+                @if (m.parser) {
+                  <span class="parser">{{ m.parser === 'llm' ? 'interpretato dall’AI' : 'interpretato a regole' }}</span>
+                }
+              </div>
+            }
+          </div>
+        }
+        <form class="chat-form" (ngSubmit)="sendChat()">
+          <input name="chat" type="text" autocomplete="off" [ngModel]="chatText()" (ngModelChange)="chatText.set($event)"
+                 placeholder="Es. oggi ho un workshop obbligatorio" [disabled]="chatBusy()" />
+          <button type="submit" class="btn-primary small" [disabled]="chatBusy() || !chatText().trim()">
+            {{ chatBusy() ? '…' : 'Invia' }}
+          </button>
+        </form>
+        <div class="examples">
+          @for (ex of examples; track ex) {
+            <button type="button" class="example" (click)="sendChat(ex)" [disabled]="chatBusy()">{{ ex }}</button>
+          }
+        </div>
+      </section>
+
       @if (recommendation(); as rec) {
         <ul class="plan-days">
           @for (day of rec.days; track day.date) {

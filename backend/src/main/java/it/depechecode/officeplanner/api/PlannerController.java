@@ -5,6 +5,7 @@ import it.depechecode.officeplanner.domain.Area;
 import it.depechecode.officeplanner.domain.Booking;
 import it.depechecode.officeplanner.domain.Recommendation;
 import it.depechecode.officeplanner.domain.User;
+import it.depechecode.officeplanner.service.ChatService;
 import it.depechecode.officeplanner.service.PlannerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,9 +29,26 @@ import java.util.NoSuchElementException;
 public class PlannerController {
 
     private final PlannerService service;
+    private final ChatService chat;
 
-    public PlannerController(PlannerService service) {
+    public PlannerController(PlannerService service, ChatService chat) {
         this.service = service;
+        this.chat = chat;
+    }
+
+    @GetMapping("/today")
+    public Map<String, String> today() {
+        return Map.of("date", service.today());
+    }
+
+    @GetMapping("/ai/ping")
+    public AiText aiPing() {
+        return service.aiPing();
+    }
+
+    @PostMapping("/chat")
+    public ChatService.ChatResult chat(@RequestBody ChatRequest request) {
+        return chat.handle(request.userId(), request.message());
     }
 
     @GetMapping("/week")
@@ -95,6 +113,9 @@ public class PlannerController {
     @ExceptionHandler({IllegalStateException.class, IllegalArgumentException.class})
     public ResponseEntity<Map<String, String>> conflict(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
+    }
+
+    public record ChatRequest(String userId, String message) {
     }
 
     public record InviteRequest(String fromUserId, String date, List<String> toUserIds) {

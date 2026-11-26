@@ -12,6 +12,7 @@ import it.depechecode.officeplanner.engine.RecommendationEngine;
 import it.depechecode.officeplanner.repository.OfficeRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -35,15 +36,30 @@ public class PlannerService {
         return repository.snapshot();
     }
 
+    /** Oggi, se cade nella settimana dei dati; altrimenti il primo giorno della settimana (demo). */
+    public String today() {
+        List<String> week = repository.snapshot().week();
+        String now = LocalDate.now().toString();
+        return week.contains(now) || week.isEmpty() ? now : week.get(0);
+    }
+
     public Recommendation recommend(String userId) {
         OfficeData data = repository.snapshot();
         return engine.recommend(requireUser(data, userId), data);
     }
 
     public AiText summary(String userId) {
+        return summary(userId, null);
+    }
+
+    public AiText summary(String userId, String latestChange) {
         OfficeData data = repository.snapshot();
         User user = requireUser(data, userId);
-        return narrator.weekSummary(user, engine.recommend(user, data), data);
+        return narrator.weekSummary(user, engine.recommend(user, data), data, latestChange);
+    }
+
+    public AiText aiPing() {
+        return narrator.ping();
     }
 
     public AiText inviteDraft(String fromUserId, String date, List<String> toUserIds) {

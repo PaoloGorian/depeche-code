@@ -5,6 +5,8 @@ import it.depechecode.officeplanner.ai.AiNarrator;
 import it.depechecode.officeplanner.ai.LlmClient;
 import it.depechecode.officeplanner.ai.NoopLlmClient;
 import it.depechecode.officeplanner.ai.OpenAiCompatibleLlmClient;
+import it.depechecode.officeplanner.chat.LlmCommandParser;
+import it.depechecode.officeplanner.chat.RuleBasedCommandParser;
 import it.depechecode.officeplanner.engine.RecommendationEngine;
 import it.depechecode.officeplanner.engine.ScoringWeights;
 import org.slf4j.Logger;
@@ -33,13 +35,24 @@ public class PlannerConfig {
     public LlmClient llmClient(@Value("${llm.base-url}") String baseUrl,
                                @Value("${llm.api-key:}") String apiKey,
                                @Value("${llm.model}") String model,
+                               @Value("${llm.reasoning-effort:}") String reasoningEffort,
                                ObjectMapper mapper) {
         if (apiKey == null || apiKey.isBlank()) {
             log.info("Nessun token LLM configurato: uso i testi a template");
             return new NoopLlmClient();
         }
         log.info("LLM attivo: {} su {}", model, baseUrl);
-        return new OpenAiCompatibleLlmClient(baseUrl, apiKey, model, mapper);
+        return new OpenAiCompatibleLlmClient(baseUrl, apiKey, model, reasoningEffort, mapper);
+    }
+
+    @Bean
+    public LlmCommandParser llmCommandParser(LlmClient llmClient, ObjectMapper mapper) {
+        return new LlmCommandParser(llmClient, mapper);
+    }
+
+    @Bean
+    public RuleBasedCommandParser ruleBasedCommandParser() {
+        return new RuleBasedCommandParser();
     }
 
     @Bean

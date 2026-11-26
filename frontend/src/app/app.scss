@@ -140,3 +140,17 @@ textarea { width: 100%; font: inherit; font-size: 14px; line-height: 1.5; paddin
   .invite-row .muted { margin-left: 64px; width: 100%; }
   .dialog-actions { flex-wrap: wrap; }
 }
+
+// ---------------------------------------------------------------- chat: impegni in linguaggio naturale
+.chat { display: flex; flex-direction: column; gap: 10px; padding: 14px 0; border-top: 1px solid var(--line); }
+.chat-log { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; }
+.bubble { align-self: flex-start; max-width: 85%; background: var(--bg); color: var(--ink); padding: 9px 12px; border-radius: 14px 14px 14px 4px; font-size: 13px; }
+.bubble.me { align-self: flex-end; background: var(--rd-navy); color: #fff; border-radius: 14px 14px 4px 14px; }
+.bubble.err { background: #fff4e5; color: #9a5a12; }
+.parser { display: block; margin-top: 3px; font-size: 11px; color: var(--muted); }
+.chat-form { display: flex; gap: 8px; }
+.chat-form input { flex: 1; min-width: 0; font: inherit; font-size: 14px; height: 42px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: #fff; }
+.chat-form input:focus { outline: none; border-color: var(--rd-blue); }
+.examples { display: flex; gap: 6px; flex-wrap: wrap; }
+.example { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 11.5px; color: var(--muted); cursor: pointer; }
+.example:hover:not(:disabled) { border-color: var(--rd-blue); color: var(--rd-blue); }
