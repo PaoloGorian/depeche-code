@@ -179,8 +179,8 @@ export function buildScene(
       pins.push({ userId: b.userId, x: sx, y: sy, role, title });
     });
 
-    // etichetta sul bordo anteriore della zona
-    const [lx, ly] = P((x0 + x1) / 2, y1 - 18);
+    // etichetta dentro la zona, davanti all'isola (non sconfina nelle zone vicine)
+    const [lx, ly] = P((x0 + x1) / 2, y1 - 42);
     const count = `${here.length}/${area.seats}`;
     const width = 40 + area.name.length * 6.6 + count.length * 6.6;
     labels.push({ areaId: area.id, x: lx, y: ly, width, name: area.name, count, color, full: here.length >= area.seats });
@@ -188,7 +188,8 @@ export function buildScene(
 
   const depth = new Map(areas.map((a, i) => [a.id, rects[i].x + rects[i].y]));
   zones.sort((a, b) => (depth.get(a.areaId) ?? 0) - (depth.get(b.areaId) ?? 0));
-  pins.sort((a, b) => a.y - b.y);
+  // dal fondo in avanti; "tu" sempre sopra gli altri cosi' non viene coperto
+  pins.sort((a, b) => Number(a.role === 'me') - Number(b.role === 'me') || a.y - b.y);
 
   // viewBox stretto attorno al pavimento (+ spazio per muretti e pallini)
   const corners = [P(0, 0), P(WORLD_W, 0), P(0, worldD), P(WORLD_W, worldD, -T)];

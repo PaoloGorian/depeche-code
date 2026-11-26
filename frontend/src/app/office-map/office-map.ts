@@ -1,4 +1,4 @@
-import { Component, computed, input, model } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, inject, input, model, signal, viewChild } from '@angular/core';
 import { Area, Booking, User, Verdict } from '../models';
 import { buildScene } from './office-map.layout';
 
@@ -33,7 +33,7 @@ import { buildScene } from './office-map.layout';
       </header>
       }
 
-      <svg class="iso" [attr.viewBox]="scene().viewBox" role="img" aria-label="Mappa delle aree e delle persone in ufficio">
+      <svg #iso class="iso" [class.full]="!compact()" [attr.viewBox]="scene().viewBox" role="img" aria-label="Mappa delle aree e delle persone in ufficio">
         @for (p of scene().floor; track $index) {
           <polygon [attr.points]="p.points" [attr.fill]="p.fill" />
         }
@@ -50,7 +50,7 @@ import { buildScene } from './office-map.layout';
             <title>{{ p.title }}</title>
             <ellipse cx="0" cy="0" rx="10" ry="4.5" class="pin-shadow" />
             @if (p.role === 'me') {
-              <circle cx="0" cy="-15" r="20" class="pin-halo" />
+              <circle cx="0" cy="-15" r="22" class="pin-halo" />
             }
             <circle cx="0" cy="-15" r="12" class="pin-face" />
             <circle cx="0" cy="-17.5" r="3.5" class="pin-head" />
@@ -58,7 +58,7 @@ import { buildScene } from './office-map.layout';
           </g>
         }
         @for (l of compact() ? [] : scene().labels; track l.areaId) {
-          <g class="label" [attr.transform]="'translate(' + l.x + ' ' + l.y + ')'">
+          <g class="label" [attr.transform]="'translate(' + l.x + ' ' + l.y + ') scale(' + labelScale() + ')'">
             <rect [attr.x]="-l.width / 2" y="-13" [attr.width]="l.width" height="26" rx="13" class="label-pill" />
             <circle [attr.cx]="-l.width / 2 + 14" cy="0" r="4" [attr.fill]="l.color" />
             <text [attr.x]="-l.width / 2 + 24" y="4">
@@ -81,14 +81,14 @@ import { buildScene } from './office-map.layout';
   styles: `
     :host { display: block; }
     .map { background: transparent; }
-    .days { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; }
+    .days { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; }
     .day {
-      display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0;
       padding: 14px 16px 12px; border-radius: 16px; border: 1px solid var(--line);
       background: var(--bg); text-align: left; transition: transform .15s ease, box-shadow .15s ease;
     }
     .day:hover { transform: translateY(-2px); }
-    .day-name { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: capitalize; }
+    .day-name { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: capitalize; white-space: nowrap; }
     .day-verdict { font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -.02em; color: var(--stay); }
     .day.go { background: var(--rd-blue-50); border-color: #c9ddf5; }
     .day.go .day-verdict { color: var(--go); }
@@ -100,8 +100,23 @@ import { buildScene } from './office-map.layout';
     .count { margin: 0; font-size: 15px; color: var(--ink); }
     .count b { font-size: 22px; }
     .me-line { color: var(--muted); }
-    @media (max-width: 700px) { .day-verdict { font-size: 22px; } .day { padding: 10px; } }
+    @media (max-width: 700px) {
+      .days { gap: 6px; }
+      .day { padding: 10px 8px; border-radius: 12px; }
+      .day-verdict { font-size: 22px; }
+    }
+    @media (max-width: 480px) {
+      .day { align-items: center; }
+      .day-name { font-size: 11px; }
+      .day-verdict { font-size: 17px; }
+      .count b { font-size: 18px; }
+      .count, .eyebrow { font-size: 12.5px; }
+    }
     .iso { display: block; width: 100%; height: auto; margin-top: 8px; }
+    /* Mappa grande: sta sempre nello schermo, il disegno si centra (preserveAspectRatio di default). */
+    @media (min-width: 1001px) {
+      .iso.full { height: calc(100vh - 300px); min-height: 320px; }
+    }
     .pin-shadow { fill: var(--rd-navy); opacity: .16; }
     .pin-face { stroke-width: 2; }
     .pin-senior .pin-face { fill: var(--rd-navy); stroke: #fff; }
@@ -110,7 +125,7 @@ import { buildScene } from './office-map.layout';
     .pin-junior .pin-head { fill: var(--rd-navy); }
     .pin-me .pin-face { fill: var(--accent); stroke: #fff; }
     .pin-me .pin-head { fill: #fff; }
-    .pin-halo { fill: var(--accent); opacity: .22; }
+    .pin-halo { fill: var(--accent); fill-opacity: .25; stroke: var(--accent); stroke-opacity: .6; stroke-width: 2; }
     .pin { cursor: default; }
     .label-pill { fill: #fff; filter: drop-shadow(0 4px 10px rgba(16, 58, 108, .12)); }
     .label text { font-size: 11.5px; }
@@ -151,6 +166,41 @@ export class OfficeMap {
   readonly inOffice = computed(() => this.bookingsOfDay().length);
 
   readonly scene = computed(() => buildScene(this.areas(), this.bookingsOfDay(), this.users(), this.meId()));
+
+  /**
+   * Fattore che tiene le etichette leggibili quando la mappa si rimpicciolisce:
+   * il testo SVG scala con il viewBox, quindi lo compensiamo (fino a un massimo, per non sovrapporle).
+   */
+  readonly labelScale = signal(1);
+  private readonly svg = viewChild<ElementRef<SVGSVGElement>>('iso');
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      const el = this.svg()?.nativeElement;
+      if (!el || typeof ResizeObserver === 'undefined') return;
+      const update = () => {
+        const [, , vbW, vbH] = (el.getAttribute('viewBox') ?? '0 0 1 1').split(' ').map(Number);
+        const { width, height } = el.getBoundingClientRect();
+        if (!width || !height || !vbW || !vbH) return;
+        const rendered = Math.min(width, height * (vbW / vbH)); // larghezza effettiva del disegno
+        const k = vbW / rendered;
+        this.labelScale.set(Math.round(Math.min(2, Math.max(1, k)) * 100) / 100);
+      };
+      const ro = new ResizeObserver(update);
+      ro.observe(el);
+      destroyRef.onDestroy(() => ro.disconnect());
+      this.measure = update;
+      update();
+    });
+    // il viewBox cambia quando arrivano le aree: ricalcola anche se il box dell'SVG resta uguale
+    effect(() => {
+      this.scene();
+      requestAnimationFrame(() => this.measure());
+    });
+  }
+
+  private measure: () => void = () => {};
 
   dayShort(iso: string): string {
     return new Date(iso + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' });
