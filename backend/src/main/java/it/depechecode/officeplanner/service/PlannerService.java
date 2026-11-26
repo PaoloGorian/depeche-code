@@ -2,10 +2,13 @@ package it.depechecode.officeplanner.service;
 
 import it.depechecode.officeplanner.ai.AiNarrator;
 import it.depechecode.officeplanner.ai.AiText;
+import it.depechecode.officeplanner.ai.LlmClient;
 import it.depechecode.officeplanner.domain.Area;
 import it.depechecode.officeplanner.domain.Booking;
 import it.depechecode.officeplanner.domain.DayRecommendation;
+import it.depechecode.officeplanner.domain.DayStatus;
 import it.depechecode.officeplanner.domain.OfficeData;
+import it.depechecode.officeplanner.domain.OfficeNeed;
 import it.depechecode.officeplanner.domain.Recommendation;
 import it.depechecode.officeplanner.domain.User;
 import it.depechecode.officeplanner.engine.RecommendationEngine;
@@ -13,7 +16,10 @@ import it.depechecode.officeplanner.repository.OfficeRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -40,10 +46,64 @@ public class PlannerService {
         return engine.recommend(requireUser(data, userId), data);
     }
 
-    public AiText summary(String userId) {
+    /**
+     * Chat "Pianifica con l'AI".
+     * Senza messaggi restituisce il consiglio iniziale. Altrimenti legge gli impegni dall'ultimo messaggio
+     * dell'utente, li salva nel profilo, ricalcola il piano col motore e fa rispondere l'AI sul piano aggiornato.
+     */
+    public ChatResult chat(String userId, List<LlmClient.Turn> history) {
         OfficeData data = repository.snapshot();
         User user = requireUser(data, userId);
-        return narrator.weekSummary(user, engine.recommend(user, data), data);
+        List<LlmClient.Turn> turns = history == null ? List.of() : history.stream()
+                .filter(t -> t.content() != null && !t.content().isBlank())
+                .map(t -> new LlmClient.Turn("assistant".equals(t.role()) ? "assistant" : "user", t.content()))
+                .toList();
+        if (turns.isEmpty() || !"user".equals(turns.get(turns.size() - 1).role())) {
+            return new ChatResult(narrator.opening(user, engine.recommend(user, data), data), List.of());
+        }
+
+        String last = turns.get(turns.size() - 1).content();
+        User current = user;
+        List<DayStatus> commitments = narrator.extractCommitments(user, last, data).stream()
+                .filter(c -> isChange(current, c))
+                .toList();
+        if (!commitments.isEmpty()) {
+            user = withCommitments(user, commitments);
+            repository.updateUser(user);
+            data = repository.snapshot();
+        }
+        AiText reply = narrator.chatReply(user, engine.recommend(user, data), data, turns, commitments);
+        return new ChatResult(reply, commitments);
+    }
+
+    /** Risposta della chat: testo dell'AI e impegni registrati da questo messaggio (vuoto se nessuno). */
+    public record ChatResult(AiText reply, List<DayStatus> commitments) {
+    }
+
+    /**
+     * true se l'impegno cambia il tipo di presenza di quel giorno.
+     * L'LLM a volte ripete impegni già noti riformulando la nota: quelli si scartano.
+     */
+    private static boolean isChange(User user, DayStatus c) {
+        return user.statusOn(c.date()).officeNeed() != c.officeNeed();
+    }
+
+    /** Unisce i nuovi impegni al profilo: stessa data sostituisce, FREE cancella l'impegno. */
+    private static User withCommitments(User user, List<DayStatus> commitments) {
+        Map<String, DayStatus> byDate = new LinkedHashMap<>();
+        user.availability().forEach(s -> byDate.put(s.date(), s));
+        for (DayStatus c : commitments) {
+            if (c.officeNeed() == OfficeNeed.FREE) {
+                byDate.remove(c.date());
+            } else {
+                byDate.put(c.date(), c);
+            }
+        }
+        List<DayStatus> availability = byDate.values().stream()
+                .sorted(Comparator.comparing(DayStatus::date))
+                .toList();
+        return new User(user.id(), user.firstName(), user.lastName(), user.email(), user.seniority(),
+                user.skills(), user.team(), user.minOfficeDays(), availability);
     }
 
     public AiText inviteDraft(String fromUserId, String date, List<String> toUserIds) {
@@ -77,6 +137,15 @@ public class PlannerService {
         Booking booking = new Booking(userId, date, area.id());
         repository.addBooking(booking);
         return booking;
+    }
+
+    /** Annulla la prenotazione dell'utente in quella data. */
+    public synchronized void cancelBooking(String userId, String date) {
+        OfficeData data = repository.snapshot();
+        User user = requireUser(data, userId);
+        if (!repository.removeBooking(userId, date)) {
+            throw new NoSuchElementException(user.fullName() + " non ha prenotazioni per " + date);
+        }
     }
 
     /** Simula l'accettazione degli inviti: prenota ogni collega nella sua area migliore. */

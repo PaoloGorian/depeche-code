@@ -1,6 +1,7 @@
 package it.depechecode.officeplanner.api;
 
 import it.depechecode.officeplanner.ai.AiText;
+import it.depechecode.officeplanner.ai.LlmClient;
 import it.depechecode.officeplanner.domain.Area;
 import it.depechecode.officeplanner.domain.Booking;
 import it.depechecode.officeplanner.domain.Recommendation;
@@ -9,6 +10,7 @@ import it.depechecode.officeplanner.service.PlannerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,15 +60,22 @@ public class PlannerController {
         return service.recommend(id);
     }
 
-    @GetMapping("/users/{id}/summary")
-    public AiText summary(@PathVariable String id) {
-        return service.summary(id);
+    /** Chat "Pianifica con l'AI": con messages vuoto restituisce il consiglio iniziale. */
+    @PostMapping("/users/{id}/chat")
+    public PlannerService.ChatResult chat(@PathVariable String id, @RequestBody ChatRequest request) {
+        return service.chat(id, request.messages());
     }
 
     @PostMapping("/bookings")
     @ResponseStatus(HttpStatus.CREATED)
     public Booking book(@RequestBody Booking request) {
         return service.book(request.userId(), request.date(), request.areaId());
+    }
+
+    @DeleteMapping("/bookings/{userId}/{date}")
+    public ResponseEntity<Void> cancelBooking(@PathVariable String userId, @PathVariable String date) {
+        service.cancelBooking(userId, date);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/invites/draft")
@@ -98,5 +107,8 @@ public class PlannerController {
     }
 
     public record InviteRequest(String fromUserId, String date, List<String> toUserIds) {
+    }
+
+    public record ChatRequest(List<LlmClient.Turn> messages) {
     }
 }

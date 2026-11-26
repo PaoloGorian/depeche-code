@@ -3,6 +3,7 @@ package it.depechecode.officeplanner.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.depechecode.officeplanner.domain.Booking;
 import it.depechecode.officeplanner.domain.OfficeData;
+import it.depechecode.officeplanner.domain.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Repository;
@@ -38,6 +39,24 @@ public class JsonOfficeRepository implements OfficeRepository {
         List<Booking> bookings = new ArrayList<>(data.bookings());
         bookings.add(booking);
         data = new OfficeData(data.week(), data.users(), data.areas(), bookings);
+    }
+
+    @Override
+    public synchronized boolean removeBooking(String userId, String date) {
+        List<Booking> bookings = new ArrayList<>(data.bookings());
+        boolean removed = bookings.removeIf(b -> b.userId().equals(userId) && b.date().equals(date));
+        if (removed) {
+            data = new OfficeData(data.week(), data.users(), data.areas(), bookings);
+        }
+        return removed;
+    }
+
+    @Override
+    public synchronized void updateUser(User user) {
+        List<User> users = data.users().stream()
+                .map(u -> u.id().equals(user.id()) ? user : u)
+                .toList();
+        data = new OfficeData(data.week(), users, data.areas(), data.bookings());
     }
 
     @Override

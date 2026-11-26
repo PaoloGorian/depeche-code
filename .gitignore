@@ -12,3 +12,6 @@ frontend/.angular/
 # OS / env
 .DS_Store
 .env
+
+# Config locale con le chiavi (letta in automatico da Spring se avvii da backend/)
+backend/config/

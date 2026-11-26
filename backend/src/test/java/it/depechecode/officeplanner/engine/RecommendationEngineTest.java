@@ -67,6 +67,19 @@ class RecommendationEngineTest {
         assertEquals(List.of(WED), rec.goDays().stream().map(DayRecommendation::date).toList());
     }
 
+    @Test
+    void remoteCommitmentMovesTheGoDayElsewhere() {
+        OfficeData data = data(List.of(new Booking("s", TUE, "a-fe")));
+        User busy = new User("j", "Chiara", "Neri", "c@x", Seniority.JUNIOR, List.of(Skill.FE), "Payments", 1,
+                List.of(new DayStatus(TUE, OfficeNeed.REMOTE, "Visita medica")));
+
+        Recommendation rec = engine.recommend(busy, data);
+
+        assertEquals(Verdict.STAY, day(rec, TUE).verdict());
+        assertEquals(1, rec.goDays().size());
+        assertTrue(day(rec, TUE).reasons().stream().anyMatch(r -> r.contains("Visita medica")));
+    }
+
     private OfficeData data(List<Booking> bookings, User... extra) {
         List<User> users = new java.util.ArrayList<>(List.of(junior, senior, remote));
         users.addAll(List.of(extra));

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AiText, Area, Booking, Recommendation, User } from './models';
+import { AiText, Area, Booking, ChatResult, ChatTurn, Recommendation, User } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class PlannerApi {
@@ -28,12 +28,17 @@ export class PlannerApi {
     return this.http.get<Recommendation>(`${this.base}/users/${userId}/recommendation`);
   }
 
-  summary(userId: string): Observable<AiText> {
-    return this.http.get<AiText>(`${this.base}/users/${userId}/summary`);
+  /** Chat con l'AI: con messages vuoto restituisce il consiglio iniziale. */
+  chat(userId: string, messages: ChatTurn[]): Observable<ChatResult> {
+    return this.http.post<ChatResult>(`${this.base}/users/${userId}/chat`, { messages });
   }
 
   book(booking: Booking): Observable<Booking> {
     return this.http.post<Booking>(`${this.base}/bookings`, booking);
+  }
+
+  cancelBooking(userId: string, date: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/bookings/${userId}/${date}`);
   }
 
   inviteDraft(fromUserId: string, date: string, toUserIds: string[]): Observable<AiText> {

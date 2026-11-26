@@ -1,9 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { BrandLogo } from './brand-logo';
 import { OfficeMap } from './office-map/office-map';
-import { AiText, Area, Booking, DayRecommendation, OfficeNeed, Recommendation, User } from './models';
+import {
+  AiText, Area, Booking, ChatMessage, ChatTurn, DayRecommendation, DayStatus, OfficeNeed, Recommendation, User,
+} from './models';
 import { PlannerApi } from './planner-api';
 
 interface InviteDialog {
@@ -28,8 +30,6 @@ export class App implements OnInit {
   readonly bookings = signal<Booking[]>([]);
   readonly selectedUserId = signal<string | null>(null);
   readonly recommendation = signal<Recommendation | null>(null);
-  readonly summary = signal<AiText | null>(null);
-  readonly summaryLoading = signal(false);
   readonly invite = signal<InviteDialog | null>(null);
   readonly toast = signal<string | null>(null);
   readonly expanded = signal<Set<string>>(new Set());
@@ -40,6 +40,19 @@ export class App implements OnInit {
   readonly loginError = signal<string | null>(null);
   readonly plannerOpen = signal(false);
   readonly mapDay = signal<string | null>(null);
+
+  // Chat "Pianifica con l'AI": il primo messaggio e' il consiglio per l'utente loggato
+  readonly messages = signal<ChatMessage[]>([]);
+  readonly chatLoading = signal(false);
+  readonly chatDraft = signal('');
+  readonly suggestions = [
+    'Giovedì ho un cliente in sede',
+    'Mercoledì sono dal medico, lavoro da casa',
+    'Con chi mi conviene andare in ufficio?',
+  ];
+  private readonly chatScroll = viewChild<ElementRef<HTMLElement>>('chatScroll');
+  /** Indice dell'ultimo messaggio che mostra le card del piano: le card compaiono una volta sola. */
+  readonly planIndex = computed(() => this.messages().map((m) => !!m.showPlan).lastIndexOf(true));
 
   readonly selectedUser = computed(() => this.users().find((u) => u.id === this.selectedUserId()) ?? null);
 
@@ -117,6 +130,7 @@ export class App implements OnInit {
 
   openPlanner(): void {
     this.plannerOpen.set(true);
+    this.scrollChat();
   }
 
   selectUser(id: string | undefined): void {
@@ -124,25 +138,87 @@ export class App implements OnInit {
     this.selectedUserId.set(id);
     this.expanded.set(new Set());
     this.refresh();
+    this.startChat();
   }
 
-  refresh(withSummary = true): void {
+  /** Ricarica prenotazioni, profili (gli impegni cambiano dalla chat) e piano del motore. */
+  refresh(): void {
     const id = this.selectedUserId();
     if (!id) return;
     this.api.bookings().subscribe((b) => this.bookings.set(b));
+    this.api.users().subscribe((u) => this.users.set(u));
     this.api.recommendation(id).subscribe((r) => this.recommendation.set(r));
-    if (withSummary) {
-      this.summary.set(null);
-      this.summaryLoading.set(true);
-      this.api.summary(id).subscribe({
-        next: (s) => {
-          this.summary.set(s);
-          this.summaryLoading.set(false);
-        },
-        error: () => this.summaryLoading.set(false),
-      });
+  }
+
+  // ---------------------------------------------------------------- chat con l'AI
+
+  /** Nuova conversazione: il primo messaggio e' il consiglio dell'AI per l'utente loggato. */
+  startChat(): void {
+    const id = this.selectedUserId();
+    if (!id) return;
+    this.messages.set([]);
+    this.chatDraft.set('');
+    this.askAi(id, []);
+  }
+
+  sendMessage(text = this.chatDraft()): void {
+    const id = this.selectedUserId();
+    const content = text.trim();
+    if (!id || !content || this.chatLoading()) return;
+    this.chatDraft.set('');
+    this.messages.update((list) => [...list, { role: 'user', content }]);
+    const history: ChatTurn[] = this.messages()
+      .filter((m) => !m.error)
+      .map(({ role, content }) => ({ role, content }));
+    this.askAi(id, history);
+  }
+
+  onChatKey(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
     }
   }
+
+  private askAi(userId: string, history: ChatTurn[]): void {
+    this.chatLoading.set(true);
+    this.scrollChat();
+    this.api.chat(userId, history).subscribe({
+      next: ({ reply, commitments }) => {
+        if (this.selectedUserId() !== userId) return; // l'utente e' cambiato nel frattempo
+        const opening = history.length === 0;
+        this.messages.update((list) => [
+          ...list,
+          { role: 'assistant', content: reply.text, ai: reply, commitments, showPlan: opening || commitments.length > 0 },
+        ]);
+        this.chatLoading.set(false);
+        if (commitments.length) this.refresh();
+        this.scrollChat();
+      },
+      error: () => {
+        this.messages.update((list) => [
+          ...list,
+          { role: 'assistant', content: 'Non riesco a contattare l\'assistente. Riprova tra poco.', error: true },
+        ]);
+        this.chatLoading.set(false);
+        this.scrollChat();
+      },
+    });
+  }
+
+  private scrollChat(): void {
+    setTimeout(() => {
+      const el = this.chatScroll()?.nativeElement;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
+  }
+
+  commitmentLabel(c: DayStatus): string {
+    const what = { REQUIRED: 'in ufficio', OPTIONAL: 'evento facoltativo', REMOTE: 'da remoto', FREE: 'impegno annullato' }[c.officeNeed];
+    return `${this.dayShort(c.date)} · ${what}${c.note ? ' · ' + c.note : ''}`;
+  }
+
+  // ---------------------------------------------------------------- prenotazioni
 
   book(day: DayRecommendation): void {
     const user = this.selectedUser();
@@ -153,6 +229,18 @@ export class App implements OnInit {
         this.refresh();
       },
       error: (e) => this.showToast(e.error?.message ?? 'Prenotazione non riuscita'),
+    });
+  }
+
+  cancelBooking(date: string): void {
+    const user = this.selectedUser();
+    if (!user) return;
+    this.api.cancelBooking(user.id, date).subscribe({
+      next: () => {
+        this.showToast(`Prenotazione di ${this.dayLabel(date)} annullata`);
+        this.refresh();
+      },
+      error: (e) => this.showToast(e.error?.message ?? 'Annullamento non riuscito'),
     });
   }
 
@@ -201,6 +289,7 @@ export class App implements OnInit {
     this.api.reset().subscribe(() => {
       this.showToast('Dati demo ripristinati');
       this.refresh();
+      this.startChat();
     });
   }
 
@@ -233,7 +322,7 @@ export class App implements OnInit {
   }
 
   needLabel(need: OfficeNeed): string {
-    return { REQUIRED: 'Obbligatorio', OPTIONAL: 'Jolly 🃏', FREE: 'Libero' }[need];
+    return { REQUIRED: 'Obbligatorio', OPTIONAL: 'Jolly 🃏', FREE: 'Libero', REMOTE: 'Da remoto' }[need];
   }
 
   scoreWidth(score: number): number {

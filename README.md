@@ -17,6 +17,19 @@ Poi apri **http://localhost:8080**. Il frontend Angular è già compilato dentro
 
 In IntelliJ: *Open* sulla cartella `backend`, attendi l'import Maven, poi Run su `OfficePlannerApplication`.
 
+### Attivare l'AI con Google Gemini (consigliato)
+
+Crea il file `backend/config/application.properties` (è in `.gitignore`, la chiave non finisce nel repo). Spring lo legge da solo se avvii da `backend/`:
+
+```properties
+llm.base-url=https://generativelanguage.googleapis.com/v1beta/openai
+llm.api-key=LA_TUA_CHIAVE_GEMINI
+llm.model=gemini-3.8-flash
+llm.fallback-models=gemini-3.6-flash,gemini-3-flash-preview,gemini-flash-lite-latest,gemini-3.5-flash-lite
+```
+
+I modelli di fallback servono quando Gemini risponde "high demand" (503): il client passa al successivo e mette in pausa per 60 secondi quello sovraccarico. In IntelliJ imposta la *Working directory* della run configuration sulla cartella `backend`.
+
 ### Attivare l'AI (GitHub Models)
 
 1. Su GitHub: *Settings → Developer settings → Fine-grained tokens*, crea un token con permesso **Models: read**.
@@ -34,6 +47,13 @@ Per cambiare provider basta la configurazione, senza toccare il codice:
 | `LLM_BASE_URL` | `https://models.github.ai/inference` | `https://api.openai.com/v1`, `http://localhost:11434/v1` (Ollama) |
 | `LLM_API_KEY` | valore di `GITHUB_TOKEN` | chiave OpenAI / Azure |
 | `LLM_MODEL` | `openai/gpt-4.1-mini` | `gpt-4o-mini`, `llama3.1` |
+| `LLM_FALLBACK_MODELS` | vuoto | modelli di riserva separati da virgola |
+
+### Pianifica con l'AI (chat)
+
+Il pannello è una chat: il primo messaggio è il consiglio per l'utente loggato. L'utente può scrivere i suoi impegni ("giovedì ho un cliente in sede", "martedì sono dal medico"): l'LLM li estrae in JSON (`REQUIRED`, `OPTIONAL`, `REMOTE`, `FREE`), il motore ricalcola il piano e l'AI risponde sul piano aggiornato. Sotto il messaggio compaiono le card dei giorni con Prenota / Annulla / Invita.
+
+API: `POST /api/users/{id}/chat` con `{"messages":[...]}` (vuoto = consiglio iniziale), `DELETE /api/bookings/{userId}/{date}` per annullare una prenotazione.
 
 ### Sviluppo frontend
 

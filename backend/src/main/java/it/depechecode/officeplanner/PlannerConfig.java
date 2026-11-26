@@ -13,6 +13,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
+
 /** Wiring: il dominio resta puro Java, Spring compone i pezzi qui. */
 @Configuration
 public class PlannerConfig {
@@ -33,17 +37,23 @@ public class PlannerConfig {
     public LlmClient llmClient(@Value("${llm.base-url}") String baseUrl,
                                @Value("${llm.api-key:}") String apiKey,
                                @Value("${llm.model}") String model,
+                               @Value("${llm.fallback-models:}") String fallbackModels,
                                ObjectMapper mapper) {
         if (apiKey == null || apiKey.isBlank()) {
             log.info("Nessun token LLM configurato: uso i testi a template");
             return new NoopLlmClient();
         }
-        log.info("LLM attivo: {} su {}", model, baseUrl);
-        return new OpenAiCompatibleLlmClient(baseUrl, apiKey, model, mapper);
+        List<String> models = Stream.concat(Stream.of(model), Arrays.stream(fallbackModels.split(",")))
+                .map(String::trim)
+                .filter(m -> !m.isEmpty())
+                .distinct()
+                .toList();
+        log.info("LLM attivo: {} su {}", models, baseUrl);
+        return new OpenAiCompatibleLlmClient(baseUrl, apiKey, models, mapper);
     }
 
     @Bean
-    public AiNarrator aiNarrator(LlmClient llmClient) {
-        return new AiNarrator(llmClient);
+    public AiNarrator aiNarrator(LlmClient llmClient, ObjectMapper mapper) {
+        return new AiNarrator(llmClient, mapper);
     }
 }

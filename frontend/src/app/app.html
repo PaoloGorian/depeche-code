@@ -85,6 +85,7 @@
           <p class="here-label">Oggi sei qui</p>
           <p class="here-title">{{ areaName(b.areaId) }}</p>
           <p class="here-sub">{{ teamTodayText() }}</p>
+          <button type="button" class="btn-ghost small" (click)="cancelBooking(b.date)">Annulla prenotazione</button>
         } @else if (dayRec(); as d) {
           @if (d.verdict === 'GO') {
             <p class="here-label">Giorno GO · area consigliata</p>
@@ -104,67 +105,107 @@
     }
   </main>
 
-  <!-- Pannello "Pianifica con l'AI": consiglio della settimana, prenotazioni e inviti -->
+  <!-- Pannello "Pianifica con l'AI": chat con l'assistente, il primo messaggio e' il consiglio per te -->
   @if (plannerOpen()) {
     <div class="scrim" (click)="plannerOpen.set(false)"></div>
     <aside class="planner" role="dialog" aria-modal="true" aria-label="Pianifica con l'AI">
       <header class="planner-head">
-        <h2>Pianifica con l'AI</h2>
+        <div>
+          <h2>Pianifica con l'AI</h2>
+          <button type="button" class="link" (click)="resetDemo()">Reset demo</button>
+        </div>
         <button type="button" class="icon" aria-label="Chiudi" (click)="plannerOpen.set(false)">×</button>
       </header>
 
-      <section class="advice">
-        <div class="advice-head">
-          <span class="label">Il consiglio della settimana</span>
-          @if (summary(); as s) {
-            <span class="ai-badge" [class.template]="s.source === 'template'">
-              {{ s.source === 'llm' ? 'AI · ' + s.provider : 'Testo a template' }}
-            </span>
-          }
-        </div>
-        @if (summaryLoading()) {
-          <p class="advice-text loading">L'AI sta incrociando agende e presenze…</p>
-        } @else {
-          <p class="advice-text">{{ summary()?.text }}</p>
-        }
-      </section>
-
-      @if (recommendation(); as rec) {
-        <ul class="plan-days">
-          @for (day of rec.days; track day.date) {
-            <li class="plan-day" [class.go]="day.verdict === 'GO'">
-              <div class="plan-main">
-                <span class="plan-verdict">{{ day.verdict }}</span>
-                <div>
-                  <p class="plan-date">{{ dayLabel(day.date) }}</p>
-                  <p class="plan-area">
-                    {{ areaName(day.areaId) }}
-                    · {{ day.areaFull ? 'al completo' : day.areaFreeSeats + ' liberi' }}
-                  </p>
-                  @if (day.note) {
-                    <p class="plan-note">{{ day.note }}</p>
-                  }
-                </div>
+      <div class="chat" #chatScroll aria-live="polite">
+        @for (m of messages(); track $index; let i = $index) {
+          @if (m.role === 'user') {
+            <div class="msg user"><p>{{ m.content }}</p></div>
+          } @else {
+            <div class="msg ai" [class.error]="m.error">
+              <span class="ai-dot" aria-hidden="true"><dc-logo [size]="26" /></span>
+              <div class="msg-body">
+                <p>{{ m.content }}</p>
+                @if (m.commitments?.length) {
+                  <ul class="commitments">
+                    @for (c of m.commitments; track c.date) {
+                      <li [class]="'need-' + c.officeNeed.toLowerCase()">{{ commitmentLabel(c) }}</li>
+                    }
+                  </ul>
+                }
+                @if (m.ai; as ai) {
+                  <span class="ai-badge" [class.template]="ai.source === 'template'">
+                    {{ ai.source === 'llm' ? 'AI · ' + ai.provider : 'Testo a template' }}
+                  </span>
+                }
               </div>
-              @if (day.verdict === 'GO') {
-                <div class="plan-actions">
-                  @if (day.alreadyBooked) {
-                    <span class="booked">Prenotato</span>
-                  } @else {
-                    <button type="button" class="btn-primary small" [disabled]="day.areaFull" (click)="book(day)">Prenota</button>
-                  }
-                  @if (day.inviteUserIds.length) {
-                    <button type="button" class="btn-ghost small" (click)="openInvite(day)">Invita {{ day.inviteUserIds.length }}</button>
-                  }
-                </div>
-              }
-            </li>
-          }
-        </ul>
-      }
+            </div>
 
-      <footer class="planner-foot">
-        <button type="button" class="link" (click)="resetDemo()">Reset demo</button>
+            <!-- card del piano, sempre aggiornate, sotto il consiglio piu' recente -->
+            @if (i === planIndex()) {
+              @if (recommendation(); as rec) {
+                <ul class="plan-days">
+                  @for (day of rec.days; track day.date) {
+                    <li class="plan-day" [class.go]="day.verdict === 'GO'" [class.booked-day]="day.alreadyBooked">
+                      <div class="plan-main">
+                        <span class="plan-verdict">{{ day.verdict }}</span>
+                        <div class="plan-info">
+                          <p class="plan-date">{{ dayLabel(day.date) }}</p>
+                          <p class="plan-area">
+                            {{ areaName(day.areaId) }}
+                            · {{ day.areaFull ? 'al completo' : day.areaFreeSeats + ' liberi' }}
+                          </p>
+                          @if (day.note) {
+                            <p class="plan-note" [class.remote]="day.officeNeed === 'REMOTE'">{{ day.note }}</p>
+                          }
+                        </div>
+                      </div>
+                      @if (day.verdict === 'GO' || day.alreadyBooked) {
+                        <div class="plan-actions">
+                          @if (day.alreadyBooked) {
+                            <span class="booked">✓ Prenotato</span>
+                            <button type="button" class="btn-ghost small" (click)="cancelBooking(day.date)">Annulla</button>
+                          } @else {
+                            <button type="button" class="btn-primary small" [disabled]="day.areaFull" (click)="book(day)">Prenota</button>
+                          }
+                          @if (day.inviteUserIds.length) {
+                            <button type="button" class="btn-ghost small" (click)="openInvite(day)">Invita {{ day.inviteUserIds.length }}</button>
+                          }
+                        </div>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            }
+          }
+        }
+        @if (chatLoading()) {
+          <div class="msg ai typing">
+            <span class="ai-dot" aria-hidden="true"><dc-logo [size]="26" /></span>
+            <div class="msg-body">
+              <p class="dots" aria-label="L'AI sta scrivendo"><span></span><span></span><span></span></p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <footer class="composer">
+        @if (messages().length <= 1 && !chatLoading()) {
+          <div class="suggestions">
+            @for (s of suggestions; track s) {
+              <button type="button" class="chip" (click)="sendMessage(s)">{{ s }}</button>
+            }
+          </div>
+        }
+        <form class="composer-row" (submit)="sendMessage(); $event.preventDefault()">
+          <textarea rows="1" name="chat" placeholder="Scrivi i tuoi impegni o fai una domanda…"
+                    [ngModel]="chatDraft()" (ngModelChange)="chatDraft.set($event)"
+                    (keydown)="onChatKey($event)" [disabled]="chatLoading()"></textarea>
+          <button type="submit" class="send" aria-label="Invia" [disabled]="chatLoading() || !chatDraft().trim()">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 12 20 4l-6 16-2.5-6.5L4 12Z" fill="currentColor" /></svg>
+          </button>
+        </form>
       </footer>
     </aside>
   }

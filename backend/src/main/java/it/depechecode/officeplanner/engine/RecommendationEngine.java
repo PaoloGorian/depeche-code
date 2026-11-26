@@ -86,6 +86,8 @@ public final class RecommendationEngine {
         } else if (need == OfficeNeed.OPTIONAL) {
             score += weights.optional();
             reasons.add("Evento facoltativo utile in presenza" + noteSuffix(status));
+        } else if (need == OfficeNeed.REMOTE) {
+            reasons.add("Non puoi venire in ufficio" + noteSuffix(status));
         }
 
         if (!teamPresent.isEmpty()) {
@@ -138,6 +140,7 @@ public final class RecommendationEngine {
         if (missing > 0) {
             evaluations.stream()
                     .filter(e -> !go.contains(e.date()))
+                    .filter(e -> e.need() != OfficeNeed.REMOTE)
                     .filter(e -> !e.areaFull())
                     .sorted(Comparator.comparingInt(DayEvaluation::score).reversed()
                             .thenComparing(DayEvaluation::date))
@@ -160,7 +163,7 @@ public final class RecommendationEngine {
         List<User> candidates = data.users().stream()
                 .filter(u -> !u.id().equals(user.id()))
                 .filter(u -> !booked.contains(u.id()))
-                .filter(u -> u.needOn(date) != OfficeNeed.REQUIRED)
+                .filter(u -> u.needOn(date) != OfficeNeed.REQUIRED && u.needOn(date) != OfficeNeed.REMOTE)
                 .toList();
 
         Set<String> invites = new LinkedHashSet<>();
